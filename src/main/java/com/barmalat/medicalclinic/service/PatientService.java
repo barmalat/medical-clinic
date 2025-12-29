@@ -32,4 +32,8 @@ public class PatientService {
     public Patient upadatePatientByEmail(String email, Patient patient) {
         return patientRepository.updatePatientByEmail(email, patient);
     }
+
+    public String updatePasswordByEmail(String email, String newPassword) {
+        return patientRepository.updatePasswordByEmail(email, newPassword);
+    }
 }

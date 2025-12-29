@@ -34,9 +34,15 @@ public class PatientRepository {
         return patient.get();
     }
 
-    public Patient updatePatientByEmail(String email, Patient patient) {
-        deletePatientByEmail(email);
-        addPatient(patient);
+    public Patient updatePatientByEmail(String email, Patient updatePatient) {
+        Patient patient = findByEmail(email).get();
+        patient.updateAll(updatePatient);
         return patient;
+    }
+
+    public String updatePasswordByEmail(String email, String newPassword) {
+        Patient patient = findByEmail(email).get();
+        patient.setPassword(newPassword);
+        return "Zmieniono hasło na:" + newPassword;
     }
 }
