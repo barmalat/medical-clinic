@@ -1,5 +1,6 @@
 package com.barmalat.medicalclinic.service;
 
+import com.barmalat.medicalclinic.model.ChangePatientDataCommand;
 import com.barmalat.medicalclinic.model.Patient;
 import com.barmalat.medicalclinic.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class PatientService {
         return patientRepository.updatePatientByEmail(email, patient);
     }
 
-    public String updatePasswordByEmail(String email, String newPassword) {
-        return patientRepository.updatePasswordByEmail(email, newPassword);
+    public String updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
+        return patientRepository.updatePasswordByEmail(email, changePasswordCommand);
     }
 }

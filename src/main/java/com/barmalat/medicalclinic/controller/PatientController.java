@@ -1,11 +1,13 @@
 package com.barmalat.medicalclinic.controller;
 
+import com.barmalat.medicalclinic.model.ChangePatientDataCommand;
 import com.barmalat.medicalclinic.model.Patient;
 import com.barmalat.medicalclinic.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -52,8 +54,8 @@ public class PatientController {
         return patientService.upadatePatientByEmail(email, patient);
     }
 
-    @PutMapping("/{email}/{newPassword}")
-    public String updatePasswordByEmail(@PathVariable String email, @PathVariable String newPassword) {
-        return patientService.updatePasswordByEmail(email, newPassword);
+    @PatchMapping("/changePassword/{email}")
+    public String updatePasswordByEmail(@PathVariable String email, @RequestBody ChangePatientDataCommand changePasswordCommand) {
+        return patientService.updatePasswordByEmail(email, changePasswordCommand);
     }
 }

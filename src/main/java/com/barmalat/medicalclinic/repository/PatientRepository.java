@@ -1,5 +1,6 @@
 package com.barmalat.medicalclinic.repository;
 
+import com.barmalat.medicalclinic.model.ChangePatientDataCommand;
 import com.barmalat.medicalclinic.model.Patient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -40,9 +41,9 @@ public class PatientRepository {
         return patient;
     }
 
-    public String updatePasswordByEmail(String email, String newPassword) {
+    public String updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
         Patient patient = findByEmail(email).get();
-        patient.setPassword(newPassword);
-        return "Zmieniono hasło na:" + newPassword;
+        patient.setPassword(changePasswordCommand.getPassword());
+        return "Zmieniono hasło na: " + changePasswordCommand.getPassword();
     }
 }
