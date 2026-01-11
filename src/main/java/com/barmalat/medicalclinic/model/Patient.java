@@ -16,9 +16,8 @@ public class Patient {
     private String phoneNumber;
     private String birthday;
 
-    public void updateAll(Patient patient){
+    public void updatePatientPublicData(Patient patient){
         email = patient.email;
-        password = patient.password;
         idCardNo = patient.idCardNo;
         firstName = patient.firstName;
         lastName = patient.lastName;

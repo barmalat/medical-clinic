@@ -1,7 +1,10 @@
 package com.barmalat.medicalclinic.controller;
 
+import com.barmalat.medicalclinic.mapper.PatientMapper;
 import com.barmalat.medicalclinic.model.ChangePatientDataCommand;
+import com.barmalat.medicalclinic.model.CreatePatientCommand;
 import com.barmalat.medicalclinic.model.Patient;
+import com.barmalat.medicalclinic.model.PatientDto;
 import com.barmalat.medicalclinic.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,45 +19,44 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/patients")
 @RequiredArgsConstructor
 public class PatientController {
     private final PatientService patientService;
+    private final PatientMapper patientMapper;
 
     @GetMapping
-    public ResponseEntity<List<Patient>> findAll() {
-        return ResponseEntity.ok().body(patientService.findAll());
+    public ResponseEntity<List<PatientDto>> findAll() {
+        return ResponseEntity.ok().body(patientService.findAll().stream()
+                .map(patientMapper::entityToDto)
+                .toList());
     }
 
     @GetMapping("/{email}")
-    public ResponseEntity<Patient> findPatientByEmail(@PathVariable String email) {
-        Optional<Patient> patient = patientService.findPatientByEmail(email);
-        if (patient.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        } else {
-            return ResponseEntity.ok().body(patient.get());
-        }
+    public PatientDto findPatientByEmail(@PathVariable String email) {
+        return patientMapper.entityToDto(patientService.findPatientByEmail(email));
     }
 
     @PostMapping
-    public ResponseEntity<Patient> addPatient(@RequestBody Patient patient) {
-        return ResponseEntity.status(201).body(patientService.addPatient(patient));
+    public ResponseEntity<PatientDto> addPatient(@RequestBody CreatePatientCommand createPatientCommand) {
+        Patient patient = patientMapper.createPatientCommandToEntity(createPatientCommand);
+        return ResponseEntity.status(201).body(patientMapper.entityToDto(patientService.addPatient(patient)));
     }
 
     @DeleteMapping("/{email}")
-    public Patient deletePatientByEmail(@PathVariable String email) {
-        return patientService.deletePatientByEmail(email);
+    public PatientDto deletePatientByEmail(@PathVariable String email) {
+        return patientMapper.entityToDto(patientService.deletePatientByEmail(email));
     }
 
     @PutMapping("/{email}")
-    public Patient updatePatientByEmail(@PathVariable String email, @RequestBody Patient patient) {
-        return patientService.upadatePatientByEmail(email, patient);
+    public PatientDto updatePatientByEmail(@PathVariable String email, @RequestBody PatientDto patientDto) {
+        Patient patient = patientMapper.dtoToEntity(patientDto);
+        return patientMapper.entityToDto(patientService.updatePatientByEmail(email, patient));
     }
 
-    @PatchMapping("/changePassword/{email}")
+    @PatchMapping("/{email}/password")
     public String updatePasswordByEmail(@PathVariable String email, @RequestBody ChangePatientDataCommand changePasswordCommand) {
         return patientService.updatePasswordByEmail(email, changePasswordCommand);
     }

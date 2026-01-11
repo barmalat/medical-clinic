@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class ChangePatientDataCommand {
-    String password;
+    private String password;
 }

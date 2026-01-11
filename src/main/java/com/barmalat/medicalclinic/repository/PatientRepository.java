@@ -29,21 +29,21 @@ public class PatientRepository {
         return patient;
     }
 
-    public Patient deletePatientByEmail(String email) {
+    public Optional<Patient> deletePatientByEmail(String email) {
         Optional<Patient> patient = findByEmail(email);
-        patients.remove(patient.get());
-        return patient.get();
-    }
-
-    public Patient updatePatientByEmail(String email, Patient updatePatient) {
-        Patient patient = findByEmail(email).get();
-        patient.updateAll(updatePatient);
+        patient.ifPresent(patients::remove);
         return patient;
     }
 
-    public String updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
-        Patient patient = findByEmail(email).get();
-        patient.setPassword(changePasswordCommand.getPassword());
-        return "Zmieniono hasło na: " + changePasswordCommand.getPassword();
+    public Optional<Patient> updatePatientByEmail(String email, Patient updatePatient) {
+        Optional<Patient> patient = findByEmail(email);
+        patient.ifPresent(p -> p.updatePatientPublicData(updatePatient));
+        return patient;
+    }
+
+    public Optional<Patient> updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
+        Optional<Patient> patient = findByEmail(email);
+        patient.ifPresent(p -> p.setPassword(changePasswordCommand.getPassword()));
+        return patient;
     }
 }
