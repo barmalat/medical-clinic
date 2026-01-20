@@ -24,22 +24,24 @@ public class PatientService {
     }
 
     public Patient addPatient(Patient patient) {
-        return patientRepository.addPatient(patient);
+        return patientRepository.save(patient);
     }
 
     public Patient deletePatientByEmail(String email) {
-        return patientRepository.deletePatientByEmail(email)
-                .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym adresie email."));
+        Patient patientToDelete = findPatientByEmail(email);
+        patientRepository.delete(patientToDelete);
+        return patientToDelete;
     }
 
     public Patient updatePatientByEmail(String email, Patient patient) {
-        return patientRepository.updatePatientByEmail(email, patient)
-                .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym adresie email."));
+        Patient patientToUpdate = findPatientByEmail(email);
+        patientToUpdate.updatePatientPublicData(patient);
+        return patientRepository.save(patientToUpdate);
     }
 
-    public String updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
-        return patientRepository.updatePasswordByEmail(email, changePasswordCommand)
-                .map(patient -> "Zmieniono hasło na: " + patient.getPassword())
-                .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym adresie email."));
+    public void updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
+        Patient patientToUpdatePassword = findPatientByEmail(email);
+        patientToUpdatePassword.setPassword(changePasswordCommand.getPassword());
+        patientRepository.save(patientToUpdatePassword);
     }
 }

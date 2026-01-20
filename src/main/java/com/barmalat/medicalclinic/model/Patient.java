@@ -16,12 +16,14 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "PATIENT")
 public class Patient {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long id;
     @Column(name = "email")
     private String email;
     @Column(name = "password")
     private String password;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idCardNo")
     private String idCardNo;
     @Column(name = "firstName")

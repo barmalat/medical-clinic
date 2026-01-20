@@ -6,6 +6,7 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class PatientDto {
+    private final long id;
     private final String email;
     private final String idCardNo;
     private final String firstName;
