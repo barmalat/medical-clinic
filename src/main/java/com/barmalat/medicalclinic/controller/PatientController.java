@@ -3,7 +3,6 @@ package com.barmalat.medicalclinic.controller;
 import com.barmalat.medicalclinic.mapper.PatientMapper;
 import com.barmalat.medicalclinic.model.ChangePatientDataCommand;
 import com.barmalat.medicalclinic.model.CreatePatientCommand;
-import com.barmalat.medicalclinic.model.Patient;
 import com.barmalat.medicalclinic.model.PatientDto;
 import com.barmalat.medicalclinic.service.PatientService;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +40,7 @@ public class PatientController {
 
     @PostMapping
     public ResponseEntity<PatientDto> addPatient(@RequestBody CreatePatientCommand createPatientCommand) {
-        Patient patient = patientMapper.createPatientCommandToEntity(createPatientCommand);
-        return ResponseEntity.status(201).body(patientMapper.entityToDto(patientService.addPatient(patient)));
+        return ResponseEntity.status(201).body(patientMapper.entityToDto(patientService.addPatient(createPatientCommand)));
     }
 
     @DeleteMapping("/{email}")
@@ -52,8 +50,7 @@ public class PatientController {
 
     @PutMapping("/{email}")
     public PatientDto updatePatientByEmail(@PathVariable String email, @RequestBody PatientDto patientDto) {
-        Patient patient = patientMapper.dtoToEntity(patientDto);
-        return patientMapper.entityToDto(patientService.updatePatientByEmail(email, patient));
+        return patientMapper.entityToDto(patientService.updatePatientByEmail(email, patientDto));
     }
 
     @PatchMapping("/{email}/password")
