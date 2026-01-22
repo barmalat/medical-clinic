@@ -1,8 +1,8 @@
 package com.barmalat.medicalclinic.mapper;
 
-import com.barmalat.medicalclinic.model.CreatePatientCommand;
-import com.barmalat.medicalclinic.model.Patient;
-import com.barmalat.medicalclinic.model.PatientDto;
+import com.barmalat.medicalclinic.model.commands.CreatePatientCommand;
+import com.barmalat.medicalclinic.model.entities.Patient;
+import com.barmalat.medicalclinic.model.dtos.PatientDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

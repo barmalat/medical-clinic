@@ -2,11 +2,11 @@ package com.barmalat.medicalclinic.service;
 
 import com.barmalat.medicalclinic.exception.PatientNotFoundException;
 import com.barmalat.medicalclinic.mapper.PatientMapper;
-import com.barmalat.medicalclinic.model.ChangePatientDataCommand;
-import com.barmalat.medicalclinic.model.CreatePatientCommand;
-import com.barmalat.medicalclinic.model.Patient;
-import com.barmalat.medicalclinic.model.PatientDto;
-import com.barmalat.medicalclinic.model.User;
+import com.barmalat.medicalclinic.model.commands.ChangePatientDataCommand;
+import com.barmalat.medicalclinic.model.commands.CreatePatientCommand;
+import com.barmalat.medicalclinic.model.entities.Patient;
+import com.barmalat.medicalclinic.model.dtos.PatientDto;
+import com.barmalat.medicalclinic.model.entities.User;
 import com.barmalat.medicalclinic.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class PatientService {
     }
 
     public Patient addPatient(CreatePatientCommand createPatientCommand) {
-        User user = new User(null, createPatientCommand.getFirstName(), createPatientCommand.getLastName(), null);
+        User user = new User(null, createPatientCommand.getFirstName(), createPatientCommand.getLastName(), null, null);
         Patient patient = patientMapper.createPatientCommandToEntity(createPatientCommand);
         patient.setUser(user);
         return patientRepository.save(patient);

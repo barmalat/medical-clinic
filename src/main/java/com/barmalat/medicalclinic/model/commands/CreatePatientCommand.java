@@ -1,13 +1,13 @@
-package com.barmalat.medicalclinic.model;
+package com.barmalat.medicalclinic.model.commands;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@AllArgsConstructor
 @Data
-public class PatientDto {
-    private final long id;
+@AllArgsConstructor
+public class CreatePatientCommand {
     private final String email;
+    private final String password;
     private final String idCardNo;
     private final String firstName;
     private final String lastName;

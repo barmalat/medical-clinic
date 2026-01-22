@@ -1,4 +1,4 @@
-package com.barmalat.medicalclinic.model;
+package com.barmalat.medicalclinic.model.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,4 +23,6 @@ public class User {
     private String lastName;
     @OneToOne(mappedBy = "user")
     Patient patient;
+    @OneToOne(mappedBy = "user")
+    Doctor doctor;
 }

@@ -1,9 +1,9 @@
 package com.barmalat.medicalclinic.controller;
 
 import com.barmalat.medicalclinic.mapper.PatientMapper;
-import com.barmalat.medicalclinic.model.ChangePatientDataCommand;
-import com.barmalat.medicalclinic.model.CreatePatientCommand;
-import com.barmalat.medicalclinic.model.PatientDto;
+import com.barmalat.medicalclinic.model.commands.ChangePatientDataCommand;
+import com.barmalat.medicalclinic.model.commands.CreatePatientCommand;
+import com.barmalat.medicalclinic.model.dtos.PatientDto;
 import com.barmalat.medicalclinic.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,5 +1,6 @@
-package com.barmalat.medicalclinic.model;
+package com.barmalat.medicalclinic.model.entities;
 
+import com.barmalat.medicalclinic.model.dtos.PatientDto;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,14 +21,14 @@ import lombok.NoArgsConstructor;
 public class Patient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String email;
     private String password;
     private String idCardNo;
     private String phoneNumber;
     private String birthday;
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "userId", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     public void updatePatientPublicData(PatientDto patient) {

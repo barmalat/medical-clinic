@@ -1,4 +1,4 @@
-package com.barmalat.medicalclinic.model;
+package com.barmalat.medicalclinic.model.commands;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

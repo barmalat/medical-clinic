@@ -1,6 +1,6 @@
 package com.barmalat.medicalclinic.repository;
 
-import com.barmalat.medicalclinic.model.Patient;
+import com.barmalat.medicalclinic.model.entities.Patient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
