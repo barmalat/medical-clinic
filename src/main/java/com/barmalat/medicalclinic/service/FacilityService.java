@@ -7,9 +7,9 @@ import com.barmalat.medicalclinic.model.dtos.FacilityDto;
 import com.barmalat.medicalclinic.model.entities.Facility;
 import com.barmalat.medicalclinic.repository.FacilityRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,8 +17,8 @@ public class FacilityService {
     private final FacilityRepository facilityRepository;
     private final FacilityMapper facilityMapper;
 
-    public List<Facility> findAll() {
-        return facilityRepository.findAll();
+    public Page<Facility> findAll(Pageable pageable) {
+        return facilityRepository.findAll(pageable);
     }
 
     public Facility findById(Long facilityId) {

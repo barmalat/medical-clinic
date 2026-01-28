@@ -9,9 +9,10 @@ import com.barmalat.medicalclinic.model.dtos.PatientDto;
 import com.barmalat.medicalclinic.model.entities.User;
 import com.barmalat.medicalclinic.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,8 +20,8 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
 
-    public List<Patient> findAll() {
-        return patientRepository.findAll();
+    public Page<Patient> findAll(Pageable pageable) {
+        return patientRepository.findAll(pageable);
     }
 
     public Patient findPatientByEmail(String email) {

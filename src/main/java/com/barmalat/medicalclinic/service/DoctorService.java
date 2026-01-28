@@ -11,6 +11,8 @@ import com.barmalat.medicalclinic.model.entities.User;
 import com.barmalat.medicalclinic.repository.DoctorRepository;
 import com.barmalat.medicalclinic.repository.FacilityRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,8 +25,8 @@ public class DoctorService {
     private final DoctorMapper doctorMapper;
     private final FacilityRepository facilityRepository;
 
-    public List<Doctor> findAll() {
-        return doctorRepository.findAll();
+    public Page<Doctor> findAll(Pageable pageable) {
+        return doctorRepository.findAll(pageable);
     }
 
     public Doctor addDoctor(CreateDoctorCommand createDoctorCommand) {

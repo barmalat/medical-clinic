@@ -6,6 +6,8 @@ import com.barmalat.medicalclinic.model.commands.CreatePatientCommand;
 import com.barmalat.medicalclinic.model.dtos.PatientDto;
 import com.barmalat.medicalclinic.service.PatientService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/patients")
@@ -27,10 +28,9 @@ public class PatientController {
     private final PatientMapper patientMapper;
 
     @GetMapping
-    public ResponseEntity<List<PatientDto>> findAll() {
-        return ResponseEntity.ok().body(patientService.findAll().stream()
-                .map(patientMapper::entityToDto)
-                .toList());
+    public Page<PatientDto> findAll(Pageable pageable) {
+        return patientService.findAll(pageable)
+                .map(patientMapper::entityToDto);
     }
 
     @GetMapping("/{email}")

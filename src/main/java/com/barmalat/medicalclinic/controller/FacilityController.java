@@ -5,6 +5,8 @@ import com.barmalat.medicalclinic.model.commands.CreateFacilityCommand;
 import com.barmalat.medicalclinic.model.dtos.FacilityDto;
 import com.barmalat.medicalclinic.service.FacilityService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/facilities")
 @RequiredArgsConstructor
@@ -26,10 +26,9 @@ public class FacilityController {
     private final FacilityMapper facilityMapper;
 
     @GetMapping
-    public List<FacilityDto> findAll() {
-        return facilityService.findAll().stream()
-                .map(facilityMapper::entityToDto)
-                .toList();
+    public Page<FacilityDto> findAll(Pageable pageable) {
+        return facilityService.findAll(pageable)
+                .map(facilityMapper::entityToDto);
     }
 
     @GetMapping("/{facilityId}")
