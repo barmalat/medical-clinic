@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -29,8 +30,22 @@ public class Facility {
     private String postalCode;
     private String street;
     private String streetNumber;
+    @ToString.Exclude
     @ManyToMany(mappedBy = "facilities")
     private List<Doctor> doctors;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Facility)) return false;
+        Facility other = (Facility) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 
     public void updateFacilityPublicData(FacilityDto facility) {
         name = facility.getName();

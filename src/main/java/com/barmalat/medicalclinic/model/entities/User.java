@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,8 +22,10 @@ public class User {
     private Long id;
     private String firstName;
     private String lastName;
+    @ToString.Exclude
     @OneToOne(mappedBy = "user")
     Patient patient;
+    @ToString.Exclude
     @OneToOne(mappedBy = "user")
     Doctor doctor;
 }
