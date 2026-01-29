@@ -24,8 +24,8 @@ public class User {
     private String lastName;
     @ToString.Exclude
     @OneToOne(mappedBy = "user")
-    Patient patient;
+    private Patient patient;
     @ToString.Exclude
     @OneToOne(mappedBy = "user")
-    Doctor doctor;
+    private Doctor doctor;
 }

@@ -15,8 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +28,8 @@ public class DoctorService {
     }
 
     public Doctor addDoctor(CreateDoctorCommand createDoctorCommand) {
-        User user = new User(null, createDoctorCommand.getFirstName(), createDoctorCommand.getLastName(), null, null);
-        Doctor doctor = doctorMapper.createDoctorCommandToEntity(createDoctorCommand);
-        List<Facility> facilities = new ArrayList<>();
-        doctor.setFacilities(facilities);
+        User user = new User(null, createDoctorCommand.firstName(), createDoctorCommand.lastName(), null, null);
+        Doctor doctor = doctorMapper.toEntity(createDoctorCommand);
         doctor.setUser(user);
         return doctorRepository.save(doctor);
     }
@@ -44,15 +40,15 @@ public class DoctorService {
     }
 
     public Doctor deleteById(Long doctorId) {
-        Doctor doctorToDelete = findById(doctorId);
-        doctorRepository.delete(doctorToDelete);
-        return doctorToDelete;
+        Doctor doctor = findById(doctorId);
+        doctorRepository.delete(doctor);
+        return doctor;
     }
 
     public Doctor updateById(Long doctorId, DoctorDto doctorDto) {
-        Doctor doctorToUpdate = findById(doctorId);
-        doctorToUpdate.updateDoctorPublicData(doctorDto);
-        return doctorRepository.save(doctorToUpdate);
+        Doctor doctor = findById(doctorId);
+        doctor.updatePublicData(doctorDto);
+        return doctorRepository.save(doctor);
     }
 
     public Doctor addFacilityById(Long doctorId, Long facilityId) {

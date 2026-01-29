@@ -28,27 +28,27 @@ public class FacilityController {
     @GetMapping
     public Page<FacilityDto> findAll(Pageable pageable) {
         return facilityService.findAll(pageable)
-                .map(facilityMapper::entityToDto);
+                .map(facilityMapper::toDto);
     }
 
     @GetMapping("/{facilityId}")
-    public FacilityDto findFacilityById(@PathVariable Long facilityId) {
-        return facilityMapper.entityToDto(facilityService.findById(facilityId));
+    public FacilityDto findById(@PathVariable Long facilityId) {
+        return facilityMapper.toDto(facilityService.findById(facilityId));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FacilityDto addFacility(@RequestBody CreateFacilityCommand createFacilityCommand) {
-        return facilityMapper.entityToDto(facilityService.addFacility(createFacilityCommand));
+        return facilityMapper.toDto(facilityService.addFacility(createFacilityCommand));
     }
 
     @DeleteMapping("/{facilityId}")
-    public FacilityDto deleteFacilityById(@PathVariable Long facilityId) {
-        return facilityMapper.entityToDto(facilityService.deleteById(facilityId));
+    public FacilityDto deleteById(@PathVariable Long facilityId) {
+        return facilityMapper.toDto(facilityService.deleteById(facilityId));
     }
 
     @PutMapping("/{facilityId}")
-    public FacilityDto updateFacilityById(@PathVariable Long facilityId, @RequestBody FacilityDto facilityDto) {
-        return facilityMapper.entityToDto(facilityService.updateById(facilityId, facilityDto));
+    public FacilityDto updateById(@PathVariable Long facilityId, @RequestBody FacilityDto facilityDto) {
+        return facilityMapper.toDto(facilityService.updateById(facilityId, facilityDto));
     }
 }

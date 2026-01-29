@@ -1,14 +1,4 @@
 package com.barmalat.medicalclinic.model.commands;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
-@Data
-@AllArgsConstructor
-public class CreateFacilityCommand {
-    private final String name;
-    private final String city;
-    private final String postalCode;
-    private final String street;
-    private final String streetNumber;
+public record CreateFacilityCommand(String name, String city, String postalCode, String street, String streetNumber) {
 }

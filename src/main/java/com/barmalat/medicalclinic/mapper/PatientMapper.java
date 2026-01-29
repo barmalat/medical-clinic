@@ -8,9 +8,8 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface PatientMapper {
-    Patient dtoToEntity(PatientDto patientDto);
     @Mapping(target = "firstName", source = "user.firstName")
     @Mapping(target = "lastName", source = "user.lastName")
-    PatientDto entityToDto(Patient patient);
-    Patient createPatientCommandToEntity(CreatePatientCommand createPatientCommand);
+    PatientDto toDto(Patient patient);
+    Patient toEntity(CreatePatientCommand createPatientCommand);
 }

@@ -15,7 +15,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,7 +39,7 @@ public class Doctor {
             name = "DOCTORS_FACILITIES",
             joinColumns = @JoinColumn(name = "doctor_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "facility_id", referencedColumnName = "id"))
-    private List<Facility> facilities;
+    private List<Facility> facilities = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
@@ -52,12 +54,37 @@ public class Doctor {
         return getClass().hashCode();
     }
 
-    public void updateDoctorPublicData(DoctorDto doctor) {
-        email = doctor.getEmail();
-        specialization = doctor.getSpecialization();
-        if (doctor.getFirstName() != null || doctor.getLastName() != null) {
-            user.setFirstName(doctor.getFirstName());
-            user.setLastName(doctor.getLastName());
+    @Override
+    public String toString() {
+        return "Doctor{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", specialization='" + specialization + '\'' +
+                ", user first name=" + user.getFirstName() +
+                ", user last name=" + user.getLastName() +
+                ", facilities=" + facilitiesToString() +
+                '}';
+    }
+
+    private String facilitiesToString() {
+        return facilities.stream()
+                .map(f -> "Facility[" +
+                        "id=" + f.getId() +
+                        ", name=" + f.getName() +
+                        ", city=" + f.getCity() +
+                        ", postalCode=" + f.getPostalCode() +
+                        ", street=" + f.getStreet() +
+                        ", streetNumber=" + f.getStreetNumber() +
+                        "]")
+                .collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    public void updatePublicData(DoctorDto doctor) {
+        email = doctor.email();
+        specialization = doctor.specialization();
+        if (doctor.firstName() != null || doctor.lastName() != null) {
+            user.setFirstName(doctor.firstName());
+            user.setLastName(doctor.lastName());
         }
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 @RequestMapping("/doctors")
 @RequiredArgsConstructor
@@ -30,32 +29,32 @@ public class DoctorController {
     @GetMapping
     public Page<DoctorDto> findAll(Pageable pageable) {
         return doctorService.findAll(pageable)
-                .map(doctorMapper::entityToDto);
+                .map(doctorMapper::toDto);
     }
 
     @GetMapping("/{doctorId}")
-    public DoctorDto findDoctorById(@PathVariable Long doctorId) {
-        return doctorMapper.entityToDto(doctorService.findById(doctorId));
+    public DoctorDto findById(@PathVariable Long doctorId) {
+        return doctorMapper.toDto(doctorService.findById(doctorId));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public DoctorDto addDoctor(@RequestBody CreateDoctorCommand createDoctorCommand) {
-        return doctorMapper.entityToDto(doctorService.addDoctor(createDoctorCommand));
+        return doctorMapper.toDto(doctorService.addDoctor(createDoctorCommand));
     }
 
     @DeleteMapping("/{doctorId}")
-    public DoctorDto deleteDoctorById(@PathVariable Long doctorId) {
-        return doctorMapper.entityToDto(doctorService.deleteById(doctorId));
+    public DoctorDto deleteById(@PathVariable Long doctorId) {
+        return doctorMapper.toDto(doctorService.deleteById(doctorId));
     }
 
     @PutMapping("/{doctorId}")
-    public DoctorDto updateDoctorById(@PathVariable Long doctorId, @RequestBody DoctorDto doctorDto) {
-        return doctorMapper.entityToDto(doctorService.updateById(doctorId, doctorDto));
+    public DoctorDto updateById(@PathVariable Long doctorId, @RequestBody DoctorDto doctorDto) {
+        return doctorMapper.toDto(doctorService.updateById(doctorId, doctorDto));
     }
 
     @PatchMapping("/{doctorId}/facility/{facilityId}")
-    public DoctorDto addFacilityByIdToDoctor(@PathVariable Long doctorId, @PathVariable Long facilityId) {
-        return doctorMapper.entityToDto(doctorService.addFacilityById(doctorId, facilityId));
+    public DoctorDto addFacilityById(@PathVariable Long doctorId, @PathVariable Long facilityId) {
+        return doctorMapper.toDto(doctorService.addFacilityById(doctorId, facilityId));
     }
 }

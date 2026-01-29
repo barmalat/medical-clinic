@@ -31,14 +31,14 @@ public class Patient {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    public void updatePatientPublicData(PatientDto patient) {
-        email = patient.getEmail();
-        idCardNo = patient.getIdCardNo();
-        phoneNumber = patient.getPhoneNumber();
-        birthday = patient.getBirthday();
-        if (patient.getFirstName() != null || patient.getLastName() != null) {
-            user.setFirstName(patient.getFirstName());
-            user.setLastName(patient.getLastName());
+    public void updatePublicData(PatientDto patient) {
+        email = patient.email();
+        idCardNo = patient.idCardNo();
+        phoneNumber = patient.phoneNumber();
+        birthday = patient.birthday();
+        if (patient.firstName() != null || patient.lastName() != null) {
+            user.setFirstName(patient.firstName());
+            user.setLastName(patient.lastName());
         }
     }
 
@@ -53,5 +53,19 @@ public class Patient {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Patient{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", idCardNo='" + idCardNo + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", birthday='" + birthday + '\'' +
+                ", user first name=" + user.getFirstName() +
+                ", user last name=" + user.getLastName() +
+                '}';
     }
 }

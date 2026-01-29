@@ -7,7 +7,6 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface FacilityMapper {
-    Facility dtoToEntity(FacilityDto facilityDto);
-    FacilityDto entityToDto(Facility facility);
-    Facility createFacilityCommandToEntity(CreateFacilityCommand createFacilityCommand);
+    FacilityDto toDto(Facility facility);
+    Facility toEntity(CreateFacilityCommand createFacilityCommand);
 }

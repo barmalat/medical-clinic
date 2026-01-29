@@ -11,9 +11,9 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,13 +24,12 @@ public class Facility {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name="FACILITY_NAME", unique=true)
+    @Column(name = "FACILITY_NAME", unique = true)
     private String name;
     private String city;
     private String postalCode;
     private String street;
     private String streetNumber;
-    @ToString.Exclude
     @ManyToMany(mappedBy = "facilities")
     private List<Doctor> doctors;
 
@@ -47,11 +46,35 @@ public class Facility {
         return getClass().hashCode();
     }
 
-    public void updateFacilityPublicData(FacilityDto facility) {
-        name = facility.getName();
-        city = facility.getCity();
-        postalCode = facility.getPostalCode();
-        street = facility.getStreet();
-        streetNumber = facility.getStreetNumber();
+    @Override
+    public String toString() {
+        return "Facility{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", city='" + city + '\'' +
+                ", postalCode='" + postalCode + '\'' +
+                ", street='" + street + '\'' +
+                ", streetNumber='" + streetNumber + '\'' +
+                ", doctors=" + doctorsToString() +
+                '}';
+    }
+
+    private String doctorsToString() {
+        return doctors.stream()
+                .map(d -> "Doctor[" +
+                        "id=" + d.getId() +
+                        ", email=" + d.getEmail() +
+                        ", specialization=" + d.getSpecialization() +
+                        ", user first name=" + d.getUser().getFirstName() +
+                        ", user last name=" + d.getUser().getLastName())
+                .collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    public void updatePublicData(FacilityDto facility) {
+        name = facility.name();
+        city = facility.city();
+        postalCode = facility.postalCode();
+        street = facility.street();
+        streetNumber = facility.streetNumber();
     }
 }

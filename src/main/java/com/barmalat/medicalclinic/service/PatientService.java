@@ -13,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @RequiredArgsConstructor
 public class PatientService {
@@ -24,33 +23,33 @@ public class PatientService {
         return patientRepository.findAll(pageable);
     }
 
-    public Patient findPatientByEmail(String email) {
+    public Patient findByEmail(String email) {
         return patientRepository.findByEmail(email)
                 .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym adresie email."));
     }
 
     public Patient addPatient(CreatePatientCommand createPatientCommand) {
-        User user = new User(null, createPatientCommand.getFirstName(), createPatientCommand.getLastName(), null, null);
-        Patient patient = patientMapper.createPatientCommandToEntity(createPatientCommand);
+        User user = new User(null, createPatientCommand.firstName(), createPatientCommand.lastName(), null, null);
+        Patient patient = patientMapper.toEntity(createPatientCommand);
         patient.setUser(user);
         return patientRepository.save(patient);
     }
 
-    public Patient deletePatientByEmail(String email) {
-        Patient patientToDelete = findPatientByEmail(email);
-        patientRepository.delete(patientToDelete);
-        return patientToDelete;
+    public Patient deleteByEmail(String email) {
+        Patient patient = findByEmail(email);
+        patientRepository.delete(patient);
+        return patient;
     }
 
-    public Patient updatePatientByEmail(String email, PatientDto patient) {
-        Patient patientToUpdate = findPatientByEmail(email);
-        patientToUpdate.updatePatientPublicData(patient);
-        return patientRepository.save(patientToUpdate);
+    public Patient updateByEmail(String email, PatientDto patientDto) {
+        Patient patient = findByEmail(email);
+        patient.updatePublicData(patientDto);
+        return patientRepository.save(patient);
     }
 
     public void updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
-        Patient patientToUpdatePassword = findPatientByEmail(email);
-        patientToUpdatePassword.setPassword(changePasswordCommand.getPassword());
-        patientRepository.save(patientToUpdatePassword);
+        Patient patient = findByEmail(email);
+        patient.setPassword(changePasswordCommand.password());
+        patientRepository.save(patient);
     }
 }

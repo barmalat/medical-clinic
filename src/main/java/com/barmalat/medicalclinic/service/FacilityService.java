@@ -27,18 +27,18 @@ public class FacilityService {
     }
 
     public Facility addFacility(CreateFacilityCommand createFacilityCommand) {
-    return facilityRepository.save(facilityMapper.createFacilityCommandToEntity(createFacilityCommand));
+    return facilityRepository.save(facilityMapper.toEntity(createFacilityCommand));
     }
 
     public Facility deleteById(Long facilityId) {
-        Facility facilityToDelete = findById(facilityId);
-        facilityRepository.delete(facilityToDelete);
-        return facilityToDelete;
+        Facility facility = findById(facilityId);
+        facilityRepository.delete(facility);
+        return facility;
     }
 
     public Facility updateById(Long facilityId, FacilityDto facilityDto) {
-        Facility facilityToUpdate = findById(facilityId);
-        facilityToUpdate.updateFacilityPublicData(facilityDto);
-        return facilityRepository.save(facilityToUpdate);
+        Facility facility = findById(facilityId);
+        facility.updatePublicData(facilityDto);
+        return facilityRepository.save(facility);
     }
 }
