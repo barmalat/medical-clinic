@@ -6,6 +6,7 @@ import com.barmalat.medicalclinic.model.commands.CreateFacilityCommand;
 import com.barmalat.medicalclinic.model.dtos.FacilityDto;
 import com.barmalat.medicalclinic.model.entities.Facility;
 import com.barmalat.medicalclinic.repository.FacilityRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,16 +27,19 @@ public class FacilityService {
                 .orElseThrow(() -> new FacilityNotFoundException("Nie znaleziono placówki o wskazanym ID."));
     }
 
+    @Transactional
     public Facility addFacility(CreateFacilityCommand createFacilityCommand) {
     return facilityRepository.save(facilityMapper.toEntity(createFacilityCommand));
     }
 
+    @Transactional
     public Facility deleteById(Long facilityId) {
         Facility facility = findById(facilityId);
         facilityRepository.delete(facility);
         return facility;
     }
 
+    @Transactional
     public Facility updateById(Long facilityId, FacilityDto facilityDto) {
         Facility facility = findById(facilityId);
         facility.updatePublicData(facilityDto);

@@ -8,6 +8,7 @@ import com.barmalat.medicalclinic.model.entities.Patient;
 import com.barmalat.medicalclinic.model.dtos.PatientDto;
 import com.barmalat.medicalclinic.model.entities.User;
 import com.barmalat.medicalclinic.repository.PatientRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +28,7 @@ public class PatientService {
         return patientRepository.findByEmail(email)
                 .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym adresie email."));
     }
-
+    @Transactional
     public Patient addPatient(CreatePatientCommand createPatientCommand) {
         User user = new User(null, createPatientCommand.firstName(), createPatientCommand.lastName(), null, null);
         Patient patient = patientMapper.toEntity(createPatientCommand);
@@ -35,18 +36,21 @@ public class PatientService {
         return patientRepository.save(patient);
     }
 
+    @Transactional
     public Patient deleteByEmail(String email) {
         Patient patient = findByEmail(email);
         patientRepository.delete(patient);
         return patient;
     }
 
+    @Transactional
     public Patient updateByEmail(String email, PatientDto patientDto) {
         Patient patient = findByEmail(email);
         patient.updatePublicData(patientDto);
         return patientRepository.save(patient);
     }
 
+    @Transactional
     public void updatePasswordByEmail(String email, ChangePatientDataCommand changePasswordCommand) {
         Patient patient = findByEmail(email);
         patient.setPassword(changePasswordCommand.password());
