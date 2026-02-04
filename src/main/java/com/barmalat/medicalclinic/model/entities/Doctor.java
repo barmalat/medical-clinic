@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -40,6 +41,8 @@ public class Doctor {
             joinColumns = @JoinColumn(name = "doctor_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "facility_id", referencedColumnName = "id"))
     private List<Facility> facilities = new ArrayList<>();
+    @OneToMany(mappedBy = "doctor")
+    private List<Visit> visits = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
