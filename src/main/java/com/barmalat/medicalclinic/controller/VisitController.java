@@ -8,14 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/visits")
@@ -25,8 +18,8 @@ public class VisitController {
     private final VisitMapper visitMapper;
 
     @GetMapping
-    public Page<VisitDto> findAll(Pageable pageable) {
-        return visitService.findAll(pageable)
+    public Page<VisitDto> find(@RequestParam(required = false) Long patientId, Pageable pageable) {
+        return visitService.find(patientId, pageable)
                 .map(visitMapper::toDto);
     }
 
@@ -39,11 +32,5 @@ public class VisitController {
     @PatchMapping("/{visitId}/patient/{patientId}")
     public VisitDto addPatientToVisit(@PathVariable Long visitId, @PathVariable Long patientId) {
         return visitMapper.toDto(visitService.addPatientToVisit(visitId, patientId));
-    }
-
-    @GetMapping("/patient/{patientId}")
-    public Page<VisitDto> findVisitsByPatientId(@PathVariable Long patientId, Pageable pageable) {
-        return visitService.findVisitsByPatientId(patientId, pageable)
-                .map(visitMapper::toDto);
     }
 }
