@@ -54,7 +54,7 @@ public class DoctorServiceTest {
         );
         when(doctorRepository.findAll(pageable)).thenReturn(new PageImpl<>(doctors, pageable, doctors.size()));
         //when
-        Page<Doctor> result = doctorRepository.findAll(pageable);
+        Page<Doctor> result = doctorService.findAll(pageable);
         //then
         Assertions.assertAll(
                 () -> assertEquals(2, result.getTotalElements()),
@@ -144,7 +144,7 @@ public class DoctorServiceTest {
         when(doctorRepository.save(any())).thenReturn(doctor);
         //when
         Doctor result = doctorService.updateById(doctorId, newData);
-        //when
+        //then
         Assertions.assertAll(
                 () -> assertEquals(1L, result.getId()),
                 () -> assertEquals("new", result.getEmail()),
@@ -173,7 +173,7 @@ public class DoctorServiceTest {
         when(doctorRepository.save(any())).thenReturn(doctor);
         //when
         Doctor result = doctorService.addFacilityById(doctorId, facilityId);
-        //when
+        //then
         Assertions.assertAll(
                 () -> assertEquals(1L, result.getId()),
                 () -> assertEquals("ema", result.getEmail()),
