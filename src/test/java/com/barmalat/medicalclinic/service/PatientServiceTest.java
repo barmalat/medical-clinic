@@ -1,15 +1,19 @@
 package com.barmalat.medicalclinic.service;
 
+import com.barmalat.medicalclinic.exception.PatientNotFoundException;
 import com.barmalat.medicalclinic.mapper.PatientMapper;
+import com.barmalat.medicalclinic.model.commands.ChangePatientDataCommand;
 import com.barmalat.medicalclinic.model.commands.CreatePatientCommand;
 import com.barmalat.medicalclinic.model.dtos.PatientDto;
 import com.barmalat.medicalclinic.model.entities.Patient;
 import com.barmalat.medicalclinic.model.entities.User;
 import com.barmalat.medicalclinic.repository.PatientRepository;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -17,14 +21,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.Objects.nonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class PatientServiceTest {
     PatientService patientService;
@@ -45,7 +50,7 @@ public class PatientServiceTest {
         List<Patient> patients = List.of(
                 new Patient(1L, "e", "p", "i", "p", "b", null),
                 new Patient(2L, "e", "p", "i", "p", "b", null));
-        when(patientRepository.findAll(pageable)).thenReturn(new PageImpl<>(patients, pageable, patients.size()));
+        when(patientRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(patients, pageable, patients.size()));
         //when
         Page<Patient> result = patientService.findAll(pageable);
         //then
@@ -53,6 +58,8 @@ public class PatientServiceTest {
                 () -> assertEquals(2, result.getTotalElements()),
                 () -> assertEquals(patients, result.getContent())
         );
+        verify(patientRepository, times(1)).findAll(pageable);
+        verifyNoMoreInteractions(patientRepository);
     }
 
     @Test
@@ -60,7 +67,7 @@ public class PatientServiceTest {
         //given
         String email = "email";
         Patient patient = new Patient(1L, "email", "567", "345", "123", "1.1.2001", null);
-        when(patientRepository.findByEmail(anyString())).thenReturn(Optional.of(patient));//czy tu lepiej anyString czy email??
+        when(patientRepository.findByEmail(anyString())).thenReturn(Optional.of(patient));
         //when
         Patient result = patientService.findByEmail(email);
         //then
@@ -73,13 +80,28 @@ public class PatientServiceTest {
                 () -> assertEquals("1.1.2001", result.getBirthday()),
                 () -> assertNull(result.getUser())
         );
+        verify(patientRepository, times(1)).findByEmail(email);
+        verifyNoMoreInteractions(patientRepository);
+    }
+
+    @Test
+    void findByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
+        //given
+        String email = "ema";
+        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        //when+then
+        PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
+                () -> patientService.findByEmail(email));
+        assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
+        verify(patientRepository, times(1)).findByEmail(email);
+        verifyNoMoreInteractions(patientRepository);
     }
 
     @Test
     void addPatient_DataCorrect_PatientReturn() {
         //given
         CreatePatientCommand command = new CreatePatientCommand("email", "567", "345", "bar", "malat", "123", "1.1.2001");
-        User user = new User(1L, "bar", "malat", null, null);//czy nie lepiej command.getName?
+        User user = new User(1L, "bar", "malat", null, null);
         Patient patient = patientMapper.toEntity(command);
         patient.setUser(user);
         patient.setId(1L);
@@ -97,6 +119,9 @@ public class PatientServiceTest {
                 () -> assertEquals("123", result.getPhoneNumber()),
                 () -> assertEquals("1.1.2001", result.getBirthday())
         );
+        verify(patientRepository, times(1)).save(argThat(new NewPatientArgumentMatcher(null,
+                "email", "567", "345", "123", "1.1.2001", "bar", "malat")));
+        verifyNoMoreInteractions(patientRepository);
     }
 
     @Test
@@ -118,6 +143,22 @@ public class PatientServiceTest {
                 () -> assertEquals("1.1.2001", result.getBirthday()),
                 () -> assertNull(result.getUser())
         );
+        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).delete(patient);
+        verifyNoMoreInteractions(patientRepository);
+    }
+
+    @Test
+    void deleteByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
+        //given
+        String email = "ema";
+        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        //when+then
+        PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
+                () -> patientService.deleteByEmail(email));
+        assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
+        verify(patientRepository, times(1)).findByEmail(email);
+        verifyNoMoreInteractions(patientRepository);
     }
 
     @Test
@@ -142,5 +183,87 @@ public class PatientServiceTest {
                 () -> assertEquals("new", result.getUser().getFirstName()),
                 () -> assertEquals("new", result.getUser().getLastName())
         );
+        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).save(argThat(new NewPatientArgumentMatcher(1L,
+                "email", "old", "new", "new", "new", "new", "new")));
+        verifyNoMoreInteractions(patientRepository);
+    }
+
+    @Test
+    void updateByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
+        //given
+        String email = "ema";
+        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        //when+then
+        PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
+                () -> patientService.updateByEmail(email, null));
+        assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
+        verify(patientRepository, times(1)).findByEmail(email);
+        verifyNoMoreInteractions(patientRepository);
+    }
+
+    @Test
+    void updatePasswordByEmail_DataCorrect_PatientUpdated() {
+        //given
+        String email = "email";
+        ChangePatientDataCommand command = new ChangePatientDataCommand("newPass");
+        Patient patient = new Patient(1L, "email", "567", "345", "123", "1.1.2001", null);
+        when(patientRepository.findByEmail(email)).thenReturn(Optional.of(patient));
+        when(patientRepository.save(any())).thenReturn(patient);
+        //when
+        patientService.updatePasswordByEmail(email, command);
+        //then
+        assertEquals("newPass", patient.getPassword());
+        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).save(argThat(new NewPatientPasswordArgumentMatcher("newPass")));
+        verifyNoMoreInteractions(patientRepository);
+    }
+
+    @Test
+    void updatePasswordByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
+        //given
+        String email = "ema";
+        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        //when + then
+        PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
+                () -> patientService.updatePasswordByEmail(email, null));
+        assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
+        verify(patientRepository, times(1)).findByEmail(email);
+        verifyNoMoreInteractions(patientRepository);
+    }
+
+    @RequiredArgsConstructor
+    public static class NewPatientArgumentMatcher implements ArgumentMatcher<Patient> {
+        private final Long id;
+        private final String email;
+        private final String password;
+        private final String idCardNo;
+        private final String phoneNumber;
+        private final String birthday;
+        private final String userFirstName;
+        private final String userLastName;
+
+        @Override
+        public boolean matches(Patient patient) {
+            return nonNull(patient) &&
+                    Objects.equals(patient.getId(), id) &&
+                    patient.getEmail().equals(email) &&
+                    patient.getPassword().equals(password) &&
+                    patient.getIdCardNo().equals(idCardNo) &&
+                    patient.getPhoneNumber().equals(phoneNumber) &&
+                    patient.getBirthday().equals(birthday) &&
+                    patient.getUser().getFirstName().equals(userFirstName) &&
+                    patient.getUser().getLastName().equals(userLastName);
+        }
+    }
+
+    @RequiredArgsConstructor
+    public static class NewPatientPasswordArgumentMatcher implements ArgumentMatcher<Patient> {
+        private final String password;
+
+        @Override
+        public boolean matches(Patient patient) {
+            return nonNull(patient) && patient.getPassword().equals(password);
+        }
     }
 }

@@ -7,9 +7,11 @@ import com.barmalat.medicalclinic.model.entities.Visit;
 import com.barmalat.medicalclinic.repository.DoctorRepository;
 import com.barmalat.medicalclinic.repository.PatientRepository;
 import com.barmalat.medicalclinic.repository.VisitRepository;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -18,13 +20,15 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.Objects.nonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class VisitServiceTest {
     VisitService visitService;
@@ -57,6 +61,8 @@ public class VisitServiceTest {
                 () -> assertEquals(2, result.getTotalElements()),
                 () -> assertEquals(visits, result.getContent())
         );
+        verify(visitRepository, times(1)).findAll(pageable);
+        verifyNoMoreInteractions(visitRepository);
     }
 
     @Test
@@ -77,6 +83,8 @@ public class VisitServiceTest {
                 () -> assertEquals(2, result.getTotalElements()),
                 () -> assertEquals(visits, result.getContent())
         );
+        verify(visitRepository, times(1)).findByPatientId(patientId, pageable);
+        verifyNoMoreInteractions(visitRepository);
     }
 
     @Test
@@ -86,6 +94,7 @@ public class VisitServiceTest {
         Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
         Visit visit = new Visit(1L, doctor, null, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2026, 2, 15, 10, 30));
         when(doctorRepository.findById(anyLong())).thenReturn(Optional.of(doctor));
+        when(visitRepository.existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(anyLong(), any(), any())).thenReturn(false);
         when(visitRepository.save(any())).thenReturn(visit);
         //when
         Visit result = visitService.addVisit(command);
@@ -97,6 +106,12 @@ public class VisitServiceTest {
                 () -> assertEquals(LocalDateTime.of(2026, 2, 15, 10, 30), result.getEndTime()),
                 () -> assertNull(result.getPatient())
         );
+        verify(doctorRepository, times(1)).findById(command.doctorId());
+        verify(visitRepository, times(1)).
+                existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(command.doctorId(), command.endTime(), command.startTime());
+        verify(visitRepository, times(1)).save(argThat(new NewVisitArgumentMatcher(null, doctor, null, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2026, 2, 15, 10, 30))));
+        verifyNoMoreInteractions(doctorRepository);
+        verifyNoMoreInteractions(visitRepository);
     }
 
     @Test
@@ -111,12 +126,47 @@ public class VisitServiceTest {
         when(patientRepository.findById(anyLong())).thenReturn(Optional.of(patient));
         when(visitRepository.save(any())).thenReturn(visit);
         //when
-        Visit result = visitService.addPatientToVisit(visitId,patientId);
+        Visit result = visitService.addPatientToVisit(visitId, patientId);
         //then
         Assertions.assertAll(
                 () -> assertEquals(1L, result.getId()),
                 () -> assertEquals(patient, result.getPatient()),
                 () -> assertEquals(doctor, result.getDoctor())
         );
+        verify(visitRepository,times(1)).findById(visitId);
+        verify(patientRepository,times(1)).findById(patientId);
+        verify(visitRepository,times(1)).save(argThat(new NewVisitWithPatientArgumentMatcher(patient)));
+        verifyNoMoreInteractions(visitRepository);
+        verifyNoMoreInteractions(patientRepository);
+    }
+
+    @RequiredArgsConstructor
+    public static class NewVisitArgumentMatcher implements ArgumentMatcher<Visit> {
+        private final Long id;
+        private final Doctor doctor;
+        private final Patient patient;
+        private final LocalDateTime startTime;
+        private final LocalDateTime endTime;
+
+        @Override
+        public boolean matches(Visit visit) {
+            return nonNull(visit) &&
+                    Objects.equals(visit.getId(), id) &&
+                    Objects.equals(visit.getDoctor(),(doctor)) &&
+                    Objects.equals(visit.getPatient(),(patient)) &&
+                    visit.getStartTime().equals(startTime) &&
+                    visit.getEndTime().equals(endTime);
+        }
+    }
+
+    @RequiredArgsConstructor
+    public static class NewVisitWithPatientArgumentMatcher implements ArgumentMatcher<Visit> {
+        private final Patient patient;
+
+        @Override
+        public boolean matches(Visit visit) {
+            return nonNull(visit) &&
+                    Objects.equals(visit.getPatient(), patient);
+        }
     }
 }
