@@ -1,5 +1,7 @@
 package com.barmalat.medicalclinic.service;
 
+import com.barmalat.medicalclinic.exception.DoctorNotFoundException;
+import com.barmalat.medicalclinic.exception.MedicalClinicException;
 import com.barmalat.medicalclinic.model.commands.CreateVisitCommand;
 import com.barmalat.medicalclinic.model.entities.Doctor;
 import com.barmalat.medicalclinic.model.entities.Patient;
@@ -50,8 +52,8 @@ public class VisitServiceTest {
         Pageable pageable = PageRequest.of(0, 5);
         Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
         List<Visit> visits = List.of(
-                new Visit(1L, doctor, null, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2025, 2, 15, 10, 30)),
-                new Visit(2L, doctor, null, LocalDateTime.of(2026, 2, 16, 10, 0), LocalDateTime.of(2025, 2, 16, 10, 30))
+                new Visit(1L, doctor, null, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30)),
+                new Visit(2L, doctor, null, LocalDateTime.of(2027, 2, 16, 10, 0), LocalDateTime.of(2027, 2, 16, 10, 30))
         );
         when(visitRepository.findAll(pageable)).thenReturn(new PageImpl<>(visits, pageable, visits.size()));
         //when
@@ -72,8 +74,8 @@ public class VisitServiceTest {
         Pageable pageable = PageRequest.of(0, 5);
         Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
         List<Visit> visits = List.of(
-                new Visit(1L, doctor, null, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2026, 2, 15, 10, 30)),
-                new Visit(2L, doctor, null, LocalDateTime.of(2026, 2, 16, 10, 0), LocalDateTime.of(2026, 2, 16, 10, 30))
+                new Visit(1L, doctor, null, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30)),
+                new Visit(2L, doctor, null, LocalDateTime.of(2027, 2, 16, 10, 0), LocalDateTime.of(2027, 2, 16, 10, 30))
         );
         when(visitRepository.findByPatientId(1L, pageable)).thenReturn(new PageImpl<>(visits, pageable, visits.size()));
         //when
@@ -90,9 +92,9 @@ public class VisitServiceTest {
     @Test
     void addVisit_DataCorrect_VisitReturn() {
         //given
-        CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2026, 2, 15, 10, 30));
+        CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30));
         Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
-        Visit visit = new Visit(1L, doctor, null, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2026, 2, 15, 10, 30));
+        Visit visit = new Visit(1L, doctor, null, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30));
         when(doctorRepository.findById(anyLong())).thenReturn(Optional.of(doctor));
         when(visitRepository.existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(anyLong(), any(), any())).thenReturn(false);
         when(visitRepository.save(any())).thenReturn(visit);
@@ -102,14 +104,96 @@ public class VisitServiceTest {
         Assertions.assertAll(
                 () -> assertEquals(1L, result.getId()),
                 () -> assertEquals(doctor, result.getDoctor()),
-                () -> assertEquals(LocalDateTime.of(2026, 2, 15, 10, 0), result.getStartTime()),
-                () -> assertEquals(LocalDateTime.of(2026, 2, 15, 10, 30), result.getEndTime()),
+                () -> assertEquals(LocalDateTime.of(2027, 2, 15, 10, 0), result.getStartTime()),
+                () -> assertEquals(LocalDateTime.of(2027, 2, 15, 10, 30), result.getEndTime()),
                 () -> assertNull(result.getPatient())
         );
         verify(doctorRepository, times(1)).findById(command.doctorId());
         verify(visitRepository, times(1)).
                 existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(command.doctorId(), command.endTime(), command.startTime());
-        verify(visitRepository, times(1)).save(argThat(new NewVisitArgumentMatcher(null, doctor, null, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2026, 2, 15, 10, 30))));
+        verify(visitRepository, times(1)).save(argThat(new NewVisitArgumentMatcher(
+                null, doctor, null, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30))));
+        verifyNoMoreInteractions(doctorRepository);
+        verifyNoMoreInteractions(visitRepository);
+    }
+
+    @Test
+    void addVisit_DoctorNotFound_DoctorNotFoundExceptionThrown() {
+        //given
+        CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30));
+        when(doctorRepository.findById(anyLong())).thenReturn(Optional.empty());
+        //when
+        DoctorNotFoundException result = Assertions.assertThrows(DoctorNotFoundException.class,
+                () -> visitService.addVisit(command));
+        //then
+        assertEquals("Nie znaleziono doktora o wskazanym ID.", result.getMessage());
+        verify(doctorRepository, times(1)).findById(command.doctorId());
+        verifyNoMoreInteractions(doctorRepository);
+        verifyNoMoreInteractions(visitRepository);
+    }
+
+    @Test
+    void addVisit_StartTimeIsNotBeforeEndTime_MedicalClinicExceptionThrown() {
+        //given
+        CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 9, 30));
+        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
+        when(doctorRepository.findById(anyLong())).thenReturn(Optional.of(doctor));
+        //when
+        MedicalClinicException result = Assertions.assertThrows(MedicalClinicException.class,
+                () -> visitService.addVisit(command));
+        //then
+        assertEquals("Wizyta musi zacząć się zanim się skończy!", result.getMessage());
+        verify(doctorRepository, times(1)).findById(command.doctorId());
+        verifyNoMoreInteractions(doctorRepository);
+        verifyNoMoreInteractions(visitRepository);
+    }
+
+    @Test
+    void addVisit_TimesAreNotDivisibleBy15_MedicalClinicExceptionThrown() {
+        //given
+        CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2027, 2, 15, 10, 5), LocalDateTime.of(2027, 2, 15, 10, 30));
+        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
+        when(doctorRepository.findById(anyLong())).thenReturn(Optional.of(doctor));
+        //when
+        MedicalClinicException result = Assertions.assertThrows(MedicalClinicException.class,
+                () -> visitService.addVisit(command));
+        //then
+        assertEquals("Wizyta musi zaczynać i kończyć się w równych kwadransach!", result.getMessage());
+        verify(doctorRepository, times(1)).findById(command.doctorId());
+        verifyNoMoreInteractions(doctorRepository);
+        verifyNoMoreInteractions(visitRepository);
+    }
+
+    @Test
+    void addVisit_StartTimeIsBeforeNow_MedicalClinicExceptionThrown() {
+        //given
+        CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30));
+        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
+        when(doctorRepository.findById(anyLong())).thenReturn(Optional.of(doctor));
+        //when
+        MedicalClinicException result = Assertions.assertThrows(MedicalClinicException.class,
+                () -> visitService.addVisit(command));
+        //then
+        assertEquals("Wizyta nie może zacząć się w przeszłości!", result.getMessage());
+        verify(doctorRepository, times(1)).findById(command.doctorId());
+        verifyNoMoreInteractions(doctorRepository);
+        verifyNoMoreInteractions(visitRepository);
+    }
+
+    @Test
+    void addVisit_existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThanReturnTrue_MedicalClinicExceptionThrown() {
+        //given
+        CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30));
+        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
+        when(doctorRepository.findById(anyLong())).thenReturn(Optional.of(doctor));
+        when(visitRepository.existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(anyLong(), any(), any())).thenReturn(true);
+        //when
+        MedicalClinicException result = Assertions.assertThrows(MedicalClinicException.class,
+                () -> visitService.addVisit(command));
+        //then
+        assertEquals("Wizyta jest w kolizji z inną wizytą doctora", result.getMessage());
+        verify(doctorRepository, times(1)).findById(command.doctorId());
+        verify(visitRepository,times(1)).existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(command.doctorId(), command.endTime(), command.startTime());
         verifyNoMoreInteractions(doctorRepository);
         verifyNoMoreInteractions(visitRepository);
     }
@@ -120,7 +204,7 @@ public class VisitServiceTest {
         Long visitId = 1L;
         Long patientId = 1L;
         Doctor doctor = new Doctor(1L, "ema", "pas", "spe", null, null, null);
-        Visit visit = new Visit(1L, doctor, null, LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2026, 2, 15, 10, 30));
+        Visit visit = new Visit(1L, doctor, null, LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30));
         Patient patient = new Patient(1L, "ema", "pas", "idc", "pho", "bir", null);
         when(visitRepository.findById(anyLong())).thenReturn(Optional.of(visit));
         when(patientRepository.findById(anyLong())).thenReturn(Optional.of(patient));
@@ -133,9 +217,9 @@ public class VisitServiceTest {
                 () -> assertEquals(patient, result.getPatient()),
                 () -> assertEquals(doctor, result.getDoctor())
         );
-        verify(visitRepository,times(1)).findById(visitId);
-        verify(patientRepository,times(1)).findById(patientId);
-        verify(visitRepository,times(1)).save(argThat(new NewVisitWithPatientArgumentMatcher(patient)));
+        verify(visitRepository, times(1)).findById(visitId);
+        verify(patientRepository, times(1)).findById(patientId);
+        verify(visitRepository, times(1)).save(argThat(new NewVisitWithPatientArgumentMatcher(patient)));
         verifyNoMoreInteractions(visitRepository);
         verifyNoMoreInteractions(patientRepository);
     }
@@ -152,8 +236,8 @@ public class VisitServiceTest {
         public boolean matches(Visit visit) {
             return nonNull(visit) &&
                     Objects.equals(visit.getId(), id) &&
-                    Objects.equals(visit.getDoctor(),(doctor)) &&
-                    Objects.equals(visit.getPatient(),(patient)) &&
+                    Objects.equals(visit.getDoctor(), (doctor)) &&
+                    Objects.equals(visit.getPatient(), (patient)) &&
                     visit.getStartTime().equals(startTime) &&
                     visit.getEndTime().equals(endTime);
         }

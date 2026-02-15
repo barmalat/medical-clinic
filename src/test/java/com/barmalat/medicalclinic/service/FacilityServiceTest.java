@@ -160,7 +160,7 @@ public class FacilityServiceTest {
     }
 
     @Test
-    void updateById() {
+    void updateById_DataCorrect_FacilityReturn() {
         //given
         Long facilityId = 1L;
         FacilityDto newData = new FacilityDto(1L, "new", "new", "new", "new", "new");
