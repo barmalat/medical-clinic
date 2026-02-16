@@ -48,7 +48,7 @@ public class VisitService {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new MedicalClinicException("Nie znaleziono wizyty o wskazanym ID.", HttpStatus.NOT_FOUND));
         if (visit.getPatient() != null) {
-            throw new MedicalClinicException("Wybrana wizyta nie jest wolna", HttpStatus.NOT_ACCEPTABLE);
+            throw new MedicalClinicException("Wybrana wizyta nie jest wolna", HttpStatus.CONFLICT);
         }
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym ID."));
@@ -70,7 +70,7 @@ public class VisitService {
             throw new MedicalClinicException("Wizyta nie może zacząć się w przeszłości!", HttpStatus.BAD_REQUEST);
         }
         if (visitRepository.existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(command.doctorId(), command.endTime(), command.startTime())) {
-            throw new MedicalClinicException("Wizyta jest w kolizji z inną wizytą doctora", HttpStatus.BAD_REQUEST);
+            throw new MedicalClinicException("Wizyta jest w kolizji z inną wizytą doctora", HttpStatus.CONFLICT);
         }
     }
 }
