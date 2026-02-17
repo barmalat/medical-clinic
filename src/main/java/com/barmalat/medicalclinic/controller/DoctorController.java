@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class DoctorController {
 
     @Operation(summary = "read all doctors", description = "opcjonalny RequestParam, np. /doctors?page=0&size=3&sort=id")
     @GetMapping
-    public Page<DoctorDto> findAll(Pageable pageable) {
+    public Page<DoctorDto> findAll(@ParameterObject Pageable pageable) {
         return doctorService.findAll(pageable)
                 .map(doctorMapper::toDto);
     }

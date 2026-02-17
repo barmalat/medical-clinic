@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,7 @@ public class FacilityController {
 
     @Operation(summary = "read all facilities", description = "opcjonalny Request Param, np. /facilities?page=0&size=3&sort=id")
     @GetMapping
-    public Page<FacilityDto> findAll(Pageable pageable) {
+    public Page<FacilityDto> findAll(@ParameterObject Pageable pageable) {
         return facilityService.findAll(pageable)
                 .map(facilityMapper::toDto);
     }

@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -70,8 +71,8 @@ public class PatientControllerTest {
 
     @Test
     void addPatient_DataCorrect_PatientDtoReturn() throws Exception {
-        Patient patient = new Patient(1L, "ema", "pas", "idC", "pho", "bir", new User(1L, "bar", "malat", null, null));
-        CreatePatientCommand command = new CreatePatientCommand("ema", "pas", "idC", "bar", "malat", "pho", "bir");
+        Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", new User(1L, "bar", "malat", null, null));
+        CreatePatientCommand command = new CreatePatientCommand("ema@pl", "pas", "idC", "bar", "malat", "pho", "bir");
         when(patientService.addPatient(any())).thenReturn(patient);
         mockMvc.perform(
                         MockMvcRequestBuilders.post("/patients")
@@ -79,7 +80,7 @@ public class PatientControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
                 .andExpect(jsonPath("$.phoneNumber").value("pho"))
                 .andExpect(jsonPath("$.birthday").value("bir"))
@@ -87,6 +88,20 @@ public class PatientControllerTest {
                 .andExpect(jsonPath("$.lastName").value("malat"));
         verify(patientService, times(1)).addPatient(command);
         verifyNoMoreInteractions(patientService);
+    }
+
+    @Test
+    void addPatient_BlankInvalidEmailAndBlankPassword_MethodArgumentNotValidExceptionThrown() throws Exception {
+        CreatePatientCommand command = new CreatePatientCommand("   ", "   ", "idC", "bar", "malat", "pho", "bir");
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/patients")
+                                .content(objectMapper.writeValueAsString(command))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").value(hasItem("email is mandatory")))
+                .andExpect(jsonPath("$.email").value(hasItem("invalid email format")))
+                .andExpect(jsonPath("$.password").value("password is mandatory"));
+        verifyNoInteractions(patientService);
     }
 
     @Test
@@ -128,14 +143,38 @@ public class PatientControllerTest {
     }
 
     @Test
+    void updateByEmail_BlankEmail_MethodArgumentNotValidExceptionThrown() throws Exception {
+        PatientDto patientDto = new PatientDto(1L, "   ", "idC", "fir", "las", "pho", "bir");
+        mockMvc.perform(
+                        MockMvcRequestBuilders.put("/patients/ema")
+                                .content(objectMapper.writeValueAsString(patientDto))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").value("email is mandatory"));
+        verifyNoInteractions(patientService);
+    }
+
+    @Test
     void updatePasswordByEmail_DataCorrect_PatientUpdated() throws Exception {
         String email = "ema";
         ChangePatientDataCommand command = new ChangePatientDataCommand("pas");
         doNothing().when(patientService).updatePasswordByEmail(email, command);
         mockMvc.perform(
+                        MockMvcRequestBuilders.patch("/patients/ema/password")
+                                .content(objectMapper.writeValueAsString(command))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void updatePasswordByEmail_BlankEmail_MethodArgumentNotValidExceptionThrown() throws Exception {
+        ChangePatientDataCommand command = new ChangePatientDataCommand("   ");
+        mockMvc.perform(
                 MockMvcRequestBuilders.patch("/patients/ema/password")
                         .content(objectMapper.writeValueAsString(command))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("password is mandatory"));
+        verifyNoInteractions(patientService);
     }
 }

@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -38,7 +40,7 @@ public class PatientController {
 
     @Operation(summary = "read all patients", description = "opcjonalny Request Param, np. /patients?page=0&size=3&sort=id")
     @GetMapping
-    public Page<PatientDto> findAll(Pageable pageable) {
+    public Page<PatientDto> findAll(@ParameterObject Pageable pageable) {
         return patientService.findAll(pageable)
                 .map(patientMapper::toDto);
     }
@@ -59,7 +61,7 @@ public class PatientController {
     @Operation(summary = "create (add) patient by creating command")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PatientDto addPatient(@RequestBody CreatePatientCommand createPatientCommand) {
+    public PatientDto addPatient(@RequestBody @Valid CreatePatientCommand createPatientCommand) {
         return patientMapper.toDto(patientService.addPatient(createPatientCommand));
     }
 
@@ -85,7 +87,7 @@ public class PatientController {
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageDto.class))})})
     @PutMapping("/{email}")
-    public PatientDto updateByEmail(@PathVariable String email, @RequestBody PatientDto patientDto) {
+    public PatientDto updateByEmail(@PathVariable String email, @RequestBody @Valid PatientDto patientDto) {
         return patientMapper.toDto(patientService.updateByEmail(email, patientDto));
     }
 
@@ -97,7 +99,7 @@ public class PatientController {
                             schema = @Schema(implementation = ErrorMessageDto.class))})})
     @PatchMapping("/{email}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updatePasswordByEmail(@PathVariable String email, @RequestBody ChangePatientDataCommand changePasswordCommand) {
+    public void updatePasswordByEmail(@PathVariable String email, @RequestBody @Valid ChangePatientDataCommand changePasswordCommand) {
         patientService.updatePasswordByEmail(email, changePasswordCommand);
     }
 }

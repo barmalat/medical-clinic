@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -31,7 +32,7 @@ public class VisitController {
             Opcjonalny Request Param dot. wyszukania wizyt dla konkretnego pacjenta, np. /visits?patientId=1
             """)
     @GetMapping
-    public Page<VisitDto> find(@RequestParam(required = false) Long patientId, Pageable pageable) {
+    public Page<VisitDto> find(@RequestParam(required = false) Long patientId, @ParameterObject Pageable pageable) {
         return visitService.find(patientId, pageable)
                 .map(visitMapper::toDto);
     }
