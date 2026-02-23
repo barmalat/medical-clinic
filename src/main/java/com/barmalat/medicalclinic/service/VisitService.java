@@ -12,6 +12,7 @@ import com.barmalat.medicalclinic.repository.PatientRepository;
 import com.barmalat.medicalclinic.repository.VisitRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VisitService {
@@ -28,23 +30,33 @@ public class VisitService {
 
     public Page<Visit> find(Long patientId, Pageable pageable) {
         if (patientId == null) {
-            return visitRepository.findAll(pageable);
+            log.info("process of finding all visits started");
+            Page<Visit> result = visitRepository.findAll(pageable);
+            log.info("process of finding all visits finished");
+            return result;
         }
-        return visitRepository.findByPatientId(patientId, pageable);
+        log.info("process of finding visits by patientId:{} started", patientId);
+        Page<Visit> result = visitRepository.findByPatientId(patientId, pageable);
+        log.info("process of finding visits by patientId:{} finished", patientId);
+        return result;
     }
 
 
     @Transactional
     public Visit addVisit(CreateVisitCommand command) {
+        log.info("process of creating new visit started");
         Doctor doctor = doctorRepository.findById(command.doctorId())
                 .orElseThrow(() -> new DoctorNotFoundException("Nie znaleziono doktora o wskazanym ID."));
         validateDates(command);
         Visit visit = new Visit(null, doctor, null, command.startTime(), command.endTime());
-        return visitRepository.save(visit);
+        Visit result = visitRepository.save(visit);
+        log.info("process of creating new visit finished");
+        return result;
     }
 
     @Transactional
     public Visit addPatientToVisit(Long visitId, Long patientId) {
+        log.info("process of adding patient to visit started");
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new MedicalClinicException("Nie znaleziono wizyty o wskazanym ID.", HttpStatus.NOT_FOUND));
         if (visit.getPatient() != null) {
@@ -56,10 +68,13 @@ public class VisitService {
             throw new MedicalClinicException("Wizyta nie może zacząć się w przeszłości!", HttpStatus.BAD_REQUEST);
         }
         visit.setPatient(patient);
-        return visitRepository.save(visit);
+        Visit result = visitRepository.save(visit);
+        log.info("process of adding patient to visit finished");
+        return result;
     }
 
     private void validateDates(CreateVisitCommand command) {
+        log.info("process of validating dates started");
         if (!command.startTime().isBefore(command.endTime())) {
             throw new MedicalClinicException("Wizyta musi zacząć się zanim się skończy!", HttpStatus.BAD_REQUEST);
         }
@@ -72,5 +87,6 @@ public class VisitService {
         if (visitRepository.existsByDoctorIdAndStartTimeLessThanAndEndTimeGreaterThan(command.doctorId(), command.endTime(), command.startTime())) {
             throw new MedicalClinicException("Wizyta jest w kolizji z inną wizytą doctora", HttpStatus.CONFLICT);
         }
+        log.info("process of validating dates finished");
     }
 }

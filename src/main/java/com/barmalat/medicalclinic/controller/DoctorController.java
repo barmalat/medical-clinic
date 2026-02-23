@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/doctors")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "/doctors", description = "all end points from DoctorController")
 public class DoctorController {
     private final DoctorService doctorService;
@@ -38,8 +41,11 @@ public class DoctorController {
     @Operation(summary = "read all doctors", description = "opcjonalny RequestParam, np. /doctors?page=0&size=3&sort=id")
     @GetMapping
     public Page<DoctorDto> findAll(@ParameterObject Pageable pageable) {
-        return doctorService.findAll(pageable)
+        log.info("Received GET /doctors request with pageable:{}", pageable);
+        Page<DoctorDto> result = doctorService.findAll(pageable)
                 .map(doctorMapper::toDto);
+        log.info("Returned response for GET /doctors with page with total elements:{}", result.getTotalElements());
+        return result;
     }
 
     @Operation(summary = "read (find) doctor by doctor.id")
@@ -52,15 +58,21 @@ public class DoctorController {
                             schema = @Schema(implementation = ErrorMessageDto.class))})})
     @GetMapping("/{doctorId}")
     public DoctorDto findById(@PathVariable Long doctorId) {
-        return doctorMapper.toDto(doctorService.findById(doctorId));
+        log.info("Received GET /doctors/{} request with Path Variable doctorId:{}", doctorId, doctorId);
+        DoctorDto result = doctorMapper.toDto(doctorService.findById(doctorId));
+        log.info("Returned response for GET /doctors/{} with body:{}", doctorId, result);
+        return result;
     }
 
 
     @Operation(summary = "create (add) doctor by creating command")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public DoctorDto addDoctor(@RequestBody CreateDoctorCommand createDoctorCommand) {
-        return doctorMapper.toDto(doctorService.addDoctor(createDoctorCommand));
+    public DoctorDto addDoctor(@RequestBody @Valid CreateDoctorCommand createDoctorCommand) {
+        log.info("Received POST /doctors request with body:{}", createDoctorCommand);
+        DoctorDto result = doctorMapper.toDto(doctorService.addDoctor(createDoctorCommand));
+        log.info("Returned response for POST /doctors with body:{}", result);
+        return result;
     }
 
     @Operation(summary = "delete doctor by doctor.id")
@@ -73,7 +85,10 @@ public class DoctorController {
                             schema = @Schema(implementation = ErrorMessageDto.class))})})
     @DeleteMapping("/{doctorId}")
     public DoctorDto deleteById(@PathVariable Long doctorId) {
-        return doctorMapper.toDto(doctorService.deleteById(doctorId));
+        log.info("Received DELETE /doctors/{} request with Path Variable doctorId:{}", doctorId, doctorId);
+        DoctorDto result = doctorMapper.toDto(doctorService.deleteById(doctorId));
+        log.info("Returned response for DELETE /doctors/{} with body:{}", doctorId, result);
+        return result;
     }
 
     @Operation(summary = "update public data of doctor by doctor.id")
@@ -85,8 +100,11 @@ public class DoctorController {
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageDto.class))})})
     @PutMapping("/{doctorId}")
-    public DoctorDto updateById(@PathVariable Long doctorId, @RequestBody DoctorDto doctorDto) {
-        return doctorMapper.toDto(doctorService.updateById(doctorId, doctorDto));
+    public DoctorDto updateById(@PathVariable Long doctorId, @RequestBody @Valid DoctorDto doctorDto) {
+        log.info("Received PUT /doctors/{} request with Path Variable doctorId:{} and body:{}", doctorId, doctorId, doctorDto);
+        DoctorDto result = doctorMapper.toDto(doctorService.updateById(doctorId, doctorDto));
+        log.info("Returned response for PUT /doctors/{} with body:{}", doctorId, result);
+        return result;
     }
 
     @Operation(summary = "update doctor facilities with new facility by doctor.id and facility.id")
@@ -102,6 +120,9 @@ public class DoctorController {
                             schema = @Schema(implementation = ErrorMessageDto.class))})})
     @PatchMapping("/{doctorId}/facility/{facilityId}")
     public DoctorDto addFacilityById(@PathVariable Long doctorId, @PathVariable Long facilityId) {
-        return doctorMapper.toDto(doctorService.addFacilityById(doctorId, facilityId));
+        log.info("Received PATCH /doctors/{}/facility/{} request with Path Variable doctorId:{} and facilityId:{}", doctorId, facilityId, doctorId, facilityId);
+        DoctorDto result = doctorMapper.toDto(doctorService.addFacilityById(doctorId, facilityId));
+        log.info("Returned response for PATCH /doctors/{}/facility/{} with body:{}", doctorId, facilityId, result);
+        return result;
     }
 }

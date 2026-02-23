@@ -20,6 +20,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -79,6 +81,18 @@ public class FacilityControllerTest {
     }
 
     @Test
+    void addFacility_BlankEmail_MethodArgumentNotValidExceptionThrown() throws Exception {
+        CreateFacilityCommand command = new CreateFacilityCommand("   ", "cit", "pos", "str", "strNo");
+        mockMvc.perform(MockMvcRequestBuilders.post("/facilities")
+                        .content(objectMapper.writeValueAsString(command))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.errors.name").value(hasItem("name is mandatory")));
+        verifyNoInteractions(facilityService);
+    }
+
+    @Test
     void deleteById_DataCorrect_FacilityDtoReturn() throws Exception {
         Long facilityId = 1L;
         Facility facility = new Facility(1L, "nam", "cit", "pos", "str", "strNo", null);
@@ -107,5 +121,17 @@ public class FacilityControllerTest {
                 .andExpect(jsonPath("$.postalCode").value("pos"))
                 .andExpect(jsonPath("$.street").value("str"))
                 .andExpect(jsonPath("$.streetNumber").value("strNo"));
+    }
+
+    @Test
+    void updateById__BlankEmail_MethodArgumentNotValidExceptionThrown() throws Exception {
+        FacilityDto facilityDto = new FacilityDto(1L, "   ", "cit", "pos", "str", "strNo");
+        mockMvc.perform(MockMvcRequestBuilders.put("/facilities/1")
+                        .content(objectMapper.writeValueAsString(facilityDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.errors.name").value(hasItem("name is mandatory")));
+        verifyNoInteractions(facilityService);
     }
 }

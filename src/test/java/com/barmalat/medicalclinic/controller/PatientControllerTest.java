@@ -42,8 +42,8 @@ public class PatientControllerTest {
     void findAll_DataCorrect_PagePatientDtoReturn() throws Exception {
         Pageable pageable = PageRequest.of(0, 5);
         Page<Patient> page = new PageImpl<>(List.of(
-                new Patient(1L, "ema", "pas", "idC", "pho", "bir", null),
-                new Patient(2L, "ema", "pas", "idC", "pho", "bir", null),
+                new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", null),
+                new Patient(2L, "ema@pl", "pas", "idC", "pho", "bir", null),
                 new Patient()));
         when(patientService.findAll(pageable)).thenReturn(page);
         mockMvc.perform(MockMvcRequestBuilders.get("/patients?page=0&size=5"))
@@ -54,12 +54,12 @@ public class PatientControllerTest {
 
     @Test
     void findByEmail_DataCorrect_PatientDtoReturn() throws Exception {
-        String email = "ema";
-        Patient patient = new Patient(1L, "ema", "pas", "idC", "pho", "bir", null);
+        String email = "ema@pl";
+        Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", null);
         when(patientService.findByEmail(email)).thenReturn(patient);
-        mockMvc.perform(MockMvcRequestBuilders.get("/patients/ema"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/patients/ema@pl"))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
                 .andExpect(jsonPath("$.phoneNumber").value("pho"))
                 .andExpect(jsonPath("$.birthday").value("bir"))
@@ -98,20 +98,21 @@ public class PatientControllerTest {
                                 .content(objectMapper.writeValueAsString(command))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value(hasItem("email is mandatory")))
-                .andExpect(jsonPath("$.email").value(hasItem("invalid email format")))
-                .andExpect(jsonPath("$.password").value("password is mandatory"));
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("email is mandatory")))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("invalid email format")))
+                .andExpect(jsonPath("$.errors.password").value("password is mandatory"));
         verifyNoInteractions(patientService);
     }
 
     @Test
     void deleteByEmail_DataCorrect_PatientDtoReturn() throws Exception {
-        String email = "ema";
-        Patient patient = new Patient(1L, "ema", "pas", "idC", "pho", "bir", new User(1L, "bar", "malat", null, null));
+        String email = "ema@pl";
+        Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", new User(1L, "bar", "malat", null, null));
         when(patientService.deleteByEmail(email)).thenReturn(patient);
         mockMvc.perform(MockMvcRequestBuilders.delete("/patients/ema"))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
                 .andExpect(jsonPath("$.phoneNumber").value("pho"))
                 .andExpect(jsonPath("$.birthday").value("bir"))
@@ -124,15 +125,15 @@ public class PatientControllerTest {
     @Test
     void updateByEmail_DataCorrect_PatientDtoReturn() throws Exception {
         String email = "ema";
-        PatientDto patientDto = new PatientDto(1L, "ema", "idC", "fir", "las", "pho", "bir");
-        Patient patient = new Patient(1L, "ema", "pas", "idC", "pho", "bir", new User(1L, "fir", "las", null, null));
+        PatientDto patientDto = new PatientDto(1L, "ema@pl", "idC", "fir", "las", "pho", "bir");
+        Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", new User(1L, "fir", "las", null, null));
         when(patientService.updateByEmail(email, patientDto)).thenReturn(patient);
         mockMvc.perform(
                         MockMvcRequestBuilders.put("/patients/ema")
                                 .content(objectMapper.writeValueAsString(patientDto))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
                 .andExpect(jsonPath("$.phoneNumber").value("pho"))
                 .andExpect(jsonPath("$.birthday").value("bir"))
@@ -146,31 +147,33 @@ public class PatientControllerTest {
     void updateByEmail_BlankEmail_MethodArgumentNotValidExceptionThrown() throws Exception {
         PatientDto patientDto = new PatientDto(1L, "   ", "idC", "fir", "las", "pho", "bir");
         mockMvc.perform(
-                        MockMvcRequestBuilders.put("/patients/ema")
+                        MockMvcRequestBuilders.put("/patients/ema@pl")
                                 .content(objectMapper.writeValueAsString(patientDto))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value("email is mandatory"));
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("invalid email format")))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("email is mandatory")));
         verifyNoInteractions(patientService);
     }
 
     @Test
     void updatePasswordByEmail_DataCorrect_PatientUpdated() throws Exception {
-        String email = "ema";
+        String email = "ema@pl";
         ChangePatientDataCommand command = new ChangePatientDataCommand("pas");
         doNothing().when(patientService).updatePasswordByEmail(email, command);
         mockMvc.perform(
-                        MockMvcRequestBuilders.patch("/patients/ema/password")
+                        MockMvcRequestBuilders.patch("/patients/ema@pl/password")
                                 .content(objectMapper.writeValueAsString(command))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void updatePasswordByEmail_BlankEmail_MethodArgumentNotValidExceptionThrown() throws Exception {
+    void updatePasswordByEmail_BlankPassword_MethodArgumentNotValidExceptionThrown() throws Exception {
         ChangePatientDataCommand command = new ChangePatientDataCommand("   ");
         mockMvc.perform(
-                MockMvcRequestBuilders.patch("/patients/ema/password")
+                MockMvcRequestBuilders.patch("/patients/ema@pl/password")
                         .content(objectMapper.writeValueAsString(command))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())

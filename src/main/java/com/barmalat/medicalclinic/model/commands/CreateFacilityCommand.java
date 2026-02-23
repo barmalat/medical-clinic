@@ -1,4 +1,6 @@
 package com.barmalat.medicalclinic.model.commands;
 
-public record CreateFacilityCommand(String name, String city, String postalCode, String street, String streetNumber) {
+import jakarta.validation.constraints.NotBlank;
+
+public record CreateFacilityCommand(@NotBlank(message = "name is mandatory")String name, String city, String postalCode, String street, String streetNumber) {
 }

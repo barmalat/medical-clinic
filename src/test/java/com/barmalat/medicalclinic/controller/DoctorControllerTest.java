@@ -23,6 +23,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,8 +43,8 @@ public class DoctorControllerTest {
     void findAll_DataCorrect_PageDoctorDtoReturn() throws Exception {
         Pageable pageable = PageRequest.of(0, 5);
         Page<Doctor> page = new PageImpl<>(List.of(
-                new Doctor(1L, "ema", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>()),
-                new Doctor(2L, "ema", "pas", "spe", new User(2L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>())
+                new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>()),
+                new Doctor(2L, "ema@pl", "pas", "spe", new User(2L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>())
         ));
         when(doctorService.findAll(pageable)).thenReturn(page);
         mockMvc.perform(MockMvcRequestBuilders.get("/doctors?page=0&size=5"))
@@ -53,11 +55,11 @@ public class DoctorControllerTest {
     @Test
     void findById_DataCorrect_DoctorDtoReturn() throws Exception {
         Long doctorId = 1L;
-        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
+        Doctor doctor = new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
         when(doctorService.findById(doctorId)).thenReturn(doctor);
         mockMvc.perform(MockMvcRequestBuilders.get("/doctors/1"))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
                 .andExpect(jsonPath("$.firstName").value("fis"))
                 .andExpect(jsonPath("$.lastName").value("las"))
@@ -66,8 +68,8 @@ public class DoctorControllerTest {
 
     @Test
     void addDoctor_DataCorrect_DoctorDtoReturn() throws Exception {
-        CreateDoctorCommand command = new CreateDoctorCommand(null, "ema", "pas", "spe", "fir", "las");
-        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
+        CreateDoctorCommand command = new CreateDoctorCommand(null, "ema@pl", "pas", "spe", "fir", "las");
+        Doctor doctor = new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
         when(doctorService.addDoctor(command)).thenReturn(doctor);
         mockMvc.perform(
                         MockMvcRequestBuilders.post("/doctors")
@@ -75,21 +77,36 @@ public class DoctorControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
                 .andExpect(jsonPath("$.firstName").value("fis"))
                 .andExpect(jsonPath("$.lastName").value("las"))
                 .andExpect(jsonPath("$.facilities").isEmpty());
+    }
+
+    @Test
+    void addDoctor_BlankInvalidEmailAndBlankPassword_MethodArgumentNotValidExceptionThrown() throws Exception {
+        CreateDoctorCommand command = new CreateDoctorCommand(null, "   ", "   ", "spe", "fir", "las");
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/doctors")
+                                .content(objectMapper.writeValueAsString(command))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("email is mandatory")))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("invalid email format")))
+                .andExpect(jsonPath("$.errors.password").value("password is mandatory"));
+        verifyNoInteractions(doctorService);
     }
 
     @Test
     void deleteById_DataCorrect_DoctorDtoReturn() throws Exception {
         Long doctorId = 1L;
-        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
+        Doctor doctor = new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
         when(doctorService.deleteById(doctorId)).thenReturn(doctor);
         mockMvc.perform(MockMvcRequestBuilders.delete("/doctors/1"))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
                 .andExpect(jsonPath("$.firstName").value("fis"))
                 .andExpect(jsonPath("$.lastName").value("las"))
@@ -97,21 +114,35 @@ public class DoctorControllerTest {
     }
 
     @Test
-    void updateByIde_DataCorrect_DoctorDtoReturn() throws Exception {
+    void updateById_DataCorrect_DoctorDtoReturn() throws Exception {
         Long doctorId = 1L;
-        DoctorDto doctorDto = new DoctorDto(1L, "ema", "spe", "fir", "las", null);
-        Doctor doctor = new Doctor(1L, "ema", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
+        DoctorDto doctorDto = new DoctorDto(1L, "ema@pl", "spe", "fir", "las", null);
+        Doctor doctor = new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
         when(doctorService.updateById(doctorId, doctorDto)).thenReturn(doctor);
         mockMvc.perform(
                         MockMvcRequestBuilders.put("/doctors/1")
                                 .content(objectMapper.writeValueAsString(doctorDto))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.email").value("ema"))
+                .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
                 .andExpect(jsonPath("$.firstName").value("fis"))
                 .andExpect(jsonPath("$.lastName").value("las"))
                 .andExpect(jsonPath("$.facilities").isEmpty());
+    }
+
+    @Test
+    void updateById_BlankInvalidEmail_MethodArgumentNotValidExceptionThrown() throws Exception {
+        DoctorDto doctorDto = new DoctorDto(1L, "  ", "spe", "fir", "las", null);
+        mockMvc.perform(
+                        MockMvcRequestBuilders.put("/doctors/1")
+                                .content(objectMapper.writeValueAsString(doctorDto))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("email is mandatory")))
+                .andExpect(jsonPath("$.errors.email").value(hasItem("invalid email format")));
+        verifyNoInteractions(doctorService);
     }
 
     @Test

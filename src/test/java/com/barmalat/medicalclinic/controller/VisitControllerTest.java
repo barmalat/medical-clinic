@@ -22,6 +22,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -91,6 +93,19 @@ public class VisitControllerTest {
                 .andExpect(jsonPath("$.doctor.lastName").isEmpty())
                 .andExpect(jsonPath("$.doctor.facilities").isEmpty())
                 .andExpect(jsonPath("$.patient").isEmpty());
+    }
+
+    @Test
+    void addVisit_NullDoctorId_MethodArgumentNotValidExceptionThrown() throws Exception {
+        CreateVisitCommand command = new CreateVisitCommand(null, null, LocalDateTime.of(2026, 2, 15, 10, 0),
+                LocalDateTime.of(2025, 2, 15, 10, 30));
+        mockMvc.perform(MockMvcRequestBuilders.post("/visits")
+                        .content(objectMapper.writeValueAsString(command))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.errors.doctorId").value(hasItem("doctorId is mandatory")));
+        verifyNoInteractions(visitService);
     }
 
     @Test

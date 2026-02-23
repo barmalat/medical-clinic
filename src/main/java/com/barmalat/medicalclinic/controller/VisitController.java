@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/visits")
 @RequiredArgsConstructor
 @Tag(name = "/visits", description = "all end points from VisitController")
+@Slf4j
 public class VisitController {
     private final VisitService visitService;
     private final VisitMapper visitMapper;
@@ -33,8 +36,11 @@ public class VisitController {
             """)
     @GetMapping
     public Page<VisitDto> find(@RequestParam(required = false) Long patientId, @ParameterObject Pageable pageable) {
-        return visitService.find(patientId, pageable)
+        log.info("Received GET /visits request with pageable:{}, and with RequestParam patientId:{}", pageable, patientId);
+        Page<VisitDto> result = visitService.find(patientId, pageable)
                 .map(visitMapper::toDto);
+        log.info("Returned response for GET /visits with page with total elements:{}", result.getTotalElements());
+        return result;
     }
 
     @Operation(summary = "create (add) visit by creating command")
@@ -64,8 +70,11 @@ public class VisitController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VisitDto addVisit(@RequestBody CreateVisitCommand createVisitCommand) {
-        return visitMapper.toDto(visitService.addVisit(createVisitCommand));
+    public VisitDto addVisit(@RequestBody @Valid CreateVisitCommand createVisitCommand) {
+        log.info("Received POST /visits request with body:{}", createVisitCommand);
+        VisitDto result = visitMapper.toDto(visitService.addVisit(createVisitCommand));
+        log.info("Returned response for POST /visits with body:{}", result);
+        return result;
     }
 
     @Operation(summary = "update visit with patient by visitId and patientId")
@@ -91,6 +100,9 @@ public class VisitController {
     })
     @PatchMapping("/{visitId}/patient/{patientId}")
     public VisitDto addPatientToVisit(@PathVariable Long visitId, @PathVariable Long patientId) {
-        return visitMapper.toDto(visitService.addPatientToVisit(visitId, patientId));
+        log.info("Received PATCH /visits/{}/patient/{} request with Path Variable visitId:{} and patientId:{}", visitId, patientId, visitId, patientId);
+        VisitDto result = visitMapper.toDto(visitService.addPatientToVisit(visitId, patientId));
+        log.info("Returned response for PATCH /visits/{}/patient/{} with body:{}", visitId, patientId, result.toString());
+        return result;
     }
 }
