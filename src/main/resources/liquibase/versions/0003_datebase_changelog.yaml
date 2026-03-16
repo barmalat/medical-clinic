@@ -19,8 +19,116 @@ databaseChangeLog:
                   type: varchar(255)
                   constraints:
                     unique: true
+                    uniqueConstraintName: uq_facility_name
               - column:
-                  name: last_name
+                  name: city
+                  type: varchar(255)
+              - column:
+                  name: postal_code
+                  type: varchar(255)
+              - column:
+                  name: street
+                  type: varchar(255)
+              - column:
+                  name: street_number
+                  type: varchar(255)
+  - changeSet:
+      id: 5
+      author: barmalat
+      changes:
+        - createTable:
+            tableName: doctor
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_doctor_id
+              - column:
+                  name: email
                   type: varchar(255)
                   constraints:
                     nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: specialization
+                  type: varchar(255)
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKey: true
+                    foreignKeyName: fk_doctor_user
+                    references: medical_clinic_user(id)
+  - changeSet:
+      id: 6
+      author: barmalat
+      changes:
+          - createTable:
+              tableName: doctors_facilities
+              columns:
+                - column:
+                    name: doctor_id
+                    type: bigint
+                    constraints:
+                      nullable: false
+                      foreignKey: true
+                      foreignKeyName: fk_doctors_facilities_doctor
+                      references: doctor(id)
+                - column:
+                    name: facility_id
+                    type: bigint
+                    constraints:
+                      nullable: false
+                      foreignKey: true
+                      foreignKeyName: fk_doctors_facilities_facility
+                      references: facility(id)
+                - addPrimaryKey:
+                    tableName: doctors_facilities
+                    columnNames: doctor_id, facility_id
+                    constraintName: pk_doctors_facilities
+  - changeSet:
+      id: 7
+      author: barmalat
+      changes:
+        - createTable:
+            tableName: visit
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_visit_id
+              - column:
+                  name: doctor_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKey: true
+                    foreignKeyName: fk_visit_doctor
+                    references: doctor(id)
+              - column:
+                  name: patient_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKey: true
+                    foreignKeyName: fk_visit_patient
+                    references: patient(id)
+              - column:
+                  name: start_time
+                  type: timestamp
+              - column:
+                  name: end_time
+                  type: timestamp
