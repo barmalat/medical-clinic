@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "DOCTOR")
+@Table(name = "doctor")
 public class Doctor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +37,7 @@ public class Doctor {
     private User user;
     @ManyToMany
     @JoinTable(
-            name = "DOCTORS_FACILITIES",
+            name = "doctors_facilities",
             joinColumns = @JoinColumn(name = "doctor_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "facility_id", referencedColumnName = "id"))
     private List<Facility> facilities = new ArrayList<>();
