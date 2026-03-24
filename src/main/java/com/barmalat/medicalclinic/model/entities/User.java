@@ -15,7 +15,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "MEDICAL_CLINIC_USER")
+@Table(name = "medical_clinic_user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -19,12 +19,12 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "FACILITY")
+@Table(name = "facility")
 public class Facility {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "FACILITY_NAME", unique = true)
+    @Column(name = "facility_name", unique = true)
     private String name;
     private String city;
     private String postalCode;

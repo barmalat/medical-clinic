@@ -1,0 +1,52 @@
+version: '2'
+
+services:
+  appmedicalclinic:
+    build:
+      context: .
+    container_name: appmedicalclinic
+    ports:
+      - "8081:8080"
+    depends_on:
+      - dbmedicalclinic
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbmedicalclinic:5432/compose-postgres
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+    networks:
+      - medicalclinic_network
+
+  dbmedicalclinic:
+    image: 'postgres:13.1-alpine'
+    ports:
+      - "5433:5432"
+    container_name: dbmedicalclinic
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=compose-postgres
+    volumes:
+      - postgres_volumes:/var/lib/postgresql/data
+    networks:
+      - medicalclinic_network
+
+  pgadminmedicalclinic:
+    image: dpage/pgadmin4
+    container_name: pgadminmedicalclinic
+    environment:
+      PGADMIN_DEFAULT_EMAIL: barmalat@yahoo.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    ports:
+      - "15433:80"
+    volumes:
+      - pgadmin_volumes:/var/lib/pgadmin
+    networks:
+      - medicalclinic_network
+
+volumes:
+  postgres_volumes:
+  pgadmin_volumes:
+
+networks:
+  medicalclinic_network:
+    driver: bridge

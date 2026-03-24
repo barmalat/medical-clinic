@@ -110,7 +110,7 @@ public class PatientControllerTest {
         String email = "ema@pl";
         Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", new User(1L, "bar", "malat", null, null));
         when(patientService.deleteByEmail(email)).thenReturn(patient);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/patients/ema"))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/patients/ema@pl"))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
@@ -124,12 +124,12 @@ public class PatientControllerTest {
 
     @Test
     void updateByEmail_DataCorrect_PatientDtoReturn() throws Exception {
-        String email = "ema";
+        String email = "ema@pl";
         PatientDto patientDto = new PatientDto(1L, "ema@pl", "idC", "fir", "las", "pho", "bir");
         Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", new User(1L, "fir", "las", null, null));
         when(patientService.updateByEmail(email, patientDto)).thenReturn(patient);
         mockMvc.perform(
-                        MockMvcRequestBuilders.put("/patients/ema")
+                        MockMvcRequestBuilders.put("/patients/ema@pl")
                                 .content(objectMapper.writeValueAsString(patientDto))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1L))
@@ -177,7 +177,7 @@ public class PatientControllerTest {
                         .content(objectMapper.writeValueAsString(command))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.password").value("password is mandatory"));
+                .andExpect(jsonPath("$.errors.password").value("password is mandatory"));
         verifyNoInteractions(patientService);
     }
 }

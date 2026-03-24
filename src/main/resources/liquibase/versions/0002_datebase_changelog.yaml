@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: barmalat
+      changes:
+        - createTable:
+            tableName: medical_clinic_user
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_medical_clinic_user_id
+              - column:
+                  name: first_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 3
+      author: barmalat
+      changes:
+          - addColumn:
+              tableName: patient
+              columns:
+                - column:
+                    name: user_id
+                    type: bigint
+                    constraints:
+                      nullable: false
+                      foreignKey: true
+                      foreignKeyName: fk_patient_user
+                      references: medical_clinic_user(id)
+          - dropColumn:
+              tableName: patient
+              columnName: first_name
+          - dropColumn:
+              tableName: patient
+              columnName: last_name

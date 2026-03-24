@@ -31,7 +31,7 @@ public class PatientService {
 
     public Patient findByEmail(String email) {
         log.info("process of finding patient by email:{} started", email);
-        Patient result = patientRepository.findByEmail(email)
+        Patient result = patientRepository.findFirstByEmail(email)
                 .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym adresie email."));
         log.info("process of finding patient by email:{} finished", email);
         return result;
