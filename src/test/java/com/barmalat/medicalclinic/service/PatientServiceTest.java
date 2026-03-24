@@ -67,7 +67,7 @@ public class PatientServiceTest {
         //given
         String email = "email";
         Patient patient = new Patient(1L, "email", "567", "345", "123", "1.1.2001", null);
-        when(patientRepository.findByEmail(anyString())).thenReturn(Optional.of(patient));
+        when(patientRepository.findFirstByEmail(anyString())).thenReturn(Optional.of(patient));
         //when
         Patient result = patientService.findByEmail(email);
         //then
@@ -80,7 +80,7 @@ public class PatientServiceTest {
                 () -> assertEquals("1.1.2001", result.getBirthday()),
                 () -> assertNull(result.getUser())
         );
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verifyNoMoreInteractions(patientRepository);
     }
 
@@ -88,12 +88,12 @@ public class PatientServiceTest {
     void findByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
         //given
         String email = "ema";
-        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(patientRepository.findFirstByEmail(email)).thenReturn(Optional.empty());
         //when+then
         PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
                 () -> patientService.findByEmail(email));
         assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verifyNoMoreInteractions(patientRepository);
     }
 
@@ -129,7 +129,7 @@ public class PatientServiceTest {
         //given
         String email = "email";
         Patient patient = new Patient(1L, "email", "567", "345", "123", "1.1.2001", null);
-        when(patientRepository.findByEmail(anyString())).thenReturn(Optional.of(patient));
+        when(patientRepository.findFirstByEmail(anyString())).thenReturn(Optional.of(patient));
         doNothing().when(patientRepository).delete(patient);
         //when
         Patient result = patientService.deleteByEmail(email);
@@ -143,7 +143,7 @@ public class PatientServiceTest {
                 () -> assertEquals("1.1.2001", result.getBirthday()),
                 () -> assertNull(result.getUser())
         );
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verify(patientRepository, times(1)).delete(patient);
         verifyNoMoreInteractions(patientRepository);
     }
@@ -152,12 +152,12 @@ public class PatientServiceTest {
     void deleteByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
         //given
         String email = "ema";
-        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(patientRepository.findFirstByEmail(email)).thenReturn(Optional.empty());
         //when+then
         PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
                 () -> patientService.deleteByEmail(email));
         assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verifyNoMoreInteractions(patientRepository);
     }
 
@@ -168,7 +168,7 @@ public class PatientServiceTest {
         PatientDto newData = new PatientDto(1L, "email", "new", "new", "new", "new", "new");
         User user = new User(1L, "old", "old", null, null);
         Patient patient = new Patient(1L, "email", "old", "old", "old", "old", user);
-        when(patientRepository.findByEmail(anyString())).thenReturn(Optional.of(patient));
+        when(patientRepository.findFirstByEmail(anyString())).thenReturn(Optional.of(patient));
         when(patientRepository.save(any())).thenReturn(patient);
         //when
         Patient result = patientService.updateByEmail(email, newData);
@@ -183,7 +183,7 @@ public class PatientServiceTest {
                 () -> assertEquals("new", result.getUser().getFirstName()),
                 () -> assertEquals("new", result.getUser().getLastName())
         );
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verify(patientRepository, times(1)).save(argThat(new NewPatientArgumentMatcher(1L,
                 "email", "old", "new", "new", "new", "new", "new")));
         verifyNoMoreInteractions(patientRepository);
@@ -193,12 +193,12 @@ public class PatientServiceTest {
     void updateByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
         //given
         String email = "ema";
-        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(patientRepository.findFirstByEmail(email)).thenReturn(Optional.empty());
         //when+then
         PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
                 () -> patientService.updateByEmail(email, null));
         assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verifyNoMoreInteractions(patientRepository);
     }
 
@@ -208,13 +208,13 @@ public class PatientServiceTest {
         String email = "email";
         ChangePatientDataCommand command = new ChangePatientDataCommand("newPass");
         Patient patient = new Patient(1L, "email", "567", "345", "123", "1.1.2001", null);
-        when(patientRepository.findByEmail(email)).thenReturn(Optional.of(patient));
+        when(patientRepository.findFirstByEmail(email)).thenReturn(Optional.of(patient));
         when(patientRepository.save(any())).thenReturn(patient);
         //when
         patientService.updatePasswordByEmail(email, command);
         //then
         assertEquals("newPass", patient.getPassword());
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verify(patientRepository, times(1)).save(argThat(new NewPatientPasswordArgumentMatcher("newPass")));
         verifyNoMoreInteractions(patientRepository);
     }
@@ -223,12 +223,12 @@ public class PatientServiceTest {
     void updatePasswordByEmail_PatientNotFound_PatientNotFoundExceptionThrown() {
         //given
         String email = "ema";
-        when(patientRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(patientRepository.findFirstByEmail(email)).thenReturn(Optional.empty());
         //when + then
         PatientNotFoundException result = Assertions.assertThrows(PatientNotFoundException.class,
                 () -> patientService.updatePasswordByEmail(email, null));
         assertEquals("Nie znaleziono pacjenta o wskazanym adresie email.", result.getMessage());
-        verify(patientRepository, times(1)).findByEmail(email);
+        verify(patientRepository, times(1)).findFirstByEmail(email);
         verifyNoMoreInteractions(patientRepository);
     }
 
