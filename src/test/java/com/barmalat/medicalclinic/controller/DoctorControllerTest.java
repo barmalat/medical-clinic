@@ -40,17 +40,34 @@ public class DoctorControllerTest {
     ObjectMapper objectMapper;
 
     @Test
-    void findAll_DataCorrect_PageDoctorDtoReturn() throws Exception {
+    void findAll_DataCorrectWithoutSpecialization_PageDoctorDtoReturn() throws Exception {
         Pageable pageable = PageRequest.of(0, 5);
         Page<Doctor> page = new PageImpl<>(List.of(
                 new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>()),
                 new Doctor(2L, "ema@pl", "pas", "spe", new User(2L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>())
         ));
-        when(doctorService.findAll(pageable)).thenReturn(page);
+        when(doctorService.findAll(null, pageable)).thenReturn(page);
         mockMvc.perform(MockMvcRequestBuilders.get("/doctors?page=0&size=5"))
                 .andExpect(jsonPath("$.content[0].id").value(1L))
                 .andExpect(jsonPath("$.content[1].id").value(2L));
     }
+
+    @Test
+    void findAll_DataCorrectWithSpecialization_PageDoctorDtoReturn() throws Exception {
+        Pageable pageable = PageRequest.of(0, 5);
+        String specialization = "chirurg";
+        Page<Doctor> page = new PageImpl<>(List.of(
+                new Doctor(1L, "ema@pl", "pas", "chirurg", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>()),
+                new Doctor(2L, "ema@pl", "pas", "chirurg", new User(2L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>())
+        ));
+        when(doctorService.findAll(specialization, pageable)).thenReturn(page);
+        mockMvc.perform(MockMvcRequestBuilders.get("/doctors?page=0&size=5&specialization=chirurg"))
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].specialization").value("chirurg"))
+                .andExpect(jsonPath("$.content[1].id").value(2L))
+                .andExpect(jsonPath("$.content[1].specialization").value("chirurg"));
+    }
+
 
     @Test
     void findById_DataCorrect_DoctorDtoReturn() throws Exception {
