@@ -7,6 +7,7 @@ import com.barmalat.medicalclinic.model.commands.CreateVisitCommand;
 import com.barmalat.medicalclinic.model.entities.Doctor;
 import com.barmalat.medicalclinic.model.entities.Patient;
 import com.barmalat.medicalclinic.model.entities.Visit;
+import com.barmalat.medicalclinic.model.entities.VisitStatus;
 import com.barmalat.medicalclinic.repository.DoctorRepository;
 import com.barmalat.medicalclinic.repository.PatientRepository;
 import com.barmalat.medicalclinic.repository.VisitRepository;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -28,16 +30,31 @@ public class VisitService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
 
-    public Page<Visit> find(Long patientId, Pageable pageable) {
-        if (patientId == null) {
-            log.info("process of finding all visits started");
-            Page<Visit> result = visitRepository.findAll(pageable);
-            log.info("process of finding all visits finished");
+    public Page<Visit> find(Long patientId, Long doctorId, String specialization, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+        if (patientId != null) {
+            log.info("process of finding visits by patientId:{} started", patientId);
+            Page<Visit> result = visitRepository.findByPatientId(patientId, pageable);
+            log.info("process of finding visits by patientId:{} finished", patientId);
             return result;
         }
-        log.info("process of finding visits by patientId:{} started", patientId);
-        Page<Visit> result = visitRepository.findByPatientId(patientId, pageable);
-        log.info("process of finding visits by patientId:{} finished", patientId);
+        if (doctorId != null) {
+            log.info("process of finding visits by doctorId:{} started", doctorId);
+            if (!doctorRepository.existsById(doctorId)) {
+                throw new DoctorNotFoundException("Nie znaleziono doktora o wskazanym ID.");
+            }
+            Page<Visit> result = visitRepository.findByDoctorId(doctorId, pageable);
+            log.info("process of finding visits by doctorId:{} finished", doctorId);
+            return result;
+        }
+        if (specialization != null && from != null && to != null) {
+            log.info("process of finding visits by specialization:{} between:{} and:{} started", specialization, from, to);
+            Page<Visit> result = visitRepository.findByDoctorSpecializationAndStartTimeBetween(specialization, from, to, pageable);
+            log.info("process of finding visits by specialization:{} between:{} and:{} finished", specialization, from, to);
+            return result;
+        }
+        log.info("process of finding all visits started");
+        Page<Visit> result = visitRepository.findAll(pageable);
+        log.info("process of finding all visits finished");
         return result;
     }
 
@@ -48,7 +65,7 @@ public class VisitService {
         Doctor doctor = doctorRepository.findById(command.doctorId())
                 .orElseThrow(() -> new DoctorNotFoundException("Nie znaleziono doktora o wskazanym ID."));
         validateDates(command);
-        Visit visit = new Visit(null, doctor, null, command.startTime(), command.endTime());
+        Visit visit = new Visit(null, doctor, null, command.startTime(), command.endTime(), VisitStatus.AVAILABLE);
         Visit result = visitRepository.save(visit);
         log.info("process of creating new visit finished");
         return result;
@@ -59,8 +76,8 @@ public class VisitService {
         log.info("process of adding patient to visit started");
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new MedicalClinicException("Nie znaleziono wizyty o wskazanym ID.", HttpStatus.NOT_FOUND));
-        if (visit.getPatient() != null) {
-            throw new MedicalClinicException("Wybrana wizyta nie jest wolna", HttpStatus.CONFLICT);
+        if (visit.getStatus() != VisitStatus.AVAILABLE) {
+            throw new MedicalClinicException("Wybrana wizyta nie jest dostępna", HttpStatus.CONFLICT);
         }
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new PatientNotFoundException("Nie znaleziono pacjenta o wskazanym ID."));
@@ -68,8 +85,58 @@ public class VisitService {
             throw new MedicalClinicException("Wizyta nie może zacząć się w przeszłości!", HttpStatus.BAD_REQUEST);
         }
         visit.setPatient(patient);
+        visit.setStatus(VisitStatus.RESERVED);
         Visit result = visitRepository.save(visit);
         log.info("process of adding patient to visit finished");
+        return result;
+    }
+
+    public Page<Visit> findAvailableByDoctorId(Long doctorId, Pageable pageable) {
+        log.info("process of finding available visits for doctorId:{} started", doctorId);
+        if (!doctorRepository.existsById(doctorId)) {
+            throw new DoctorNotFoundException("Nie znaleziono doktora o wskazanym ID.");
+        }
+        Page<Visit> result = visitRepository.findByDoctorIdAndStatus(doctorId, VisitStatus.AVAILABLE, pageable);
+        log.info("process of finding available visits for doctorId:{} finished", doctorId);
+        return result;
+    }
+
+    public Page<Visit> findAvailableByDateAndSpecialization(LocalDate date, String specialization, Pageable pageable) {
+        log.info("process of finding available visits for date:{} and specialization:{} started", date, specialization);
+        LocalDateTime from = date.atStartOfDay();
+        LocalDateTime to = date.atTime(23, 59, 59);
+        Page<Visit> result = visitRepository.findByStatusAndDoctorSpecializationAndStartTimeBetween(
+                VisitStatus.AVAILABLE, specialization, from, to, pageable);
+        log.info("process of finding available visits for date:{} and specialization:{} finished", date, specialization);
+        return result;
+    }
+
+    @Transactional
+    public Visit cancelVisit(Long visitId) {
+        log.info("process of cancelling visit:{} started", visitId);
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() -> new MedicalClinicException("Nie znaleziono wizyty o wskazanym ID.", HttpStatus.NOT_FOUND));
+        if (visit.getStatus() == VisitStatus.CANCELLED) {
+            throw new MedicalClinicException("Wizyta jest już odwołana.", HttpStatus.CONFLICT);
+        }
+        visit.setStatus(VisitStatus.CANCELLED);
+        Visit result = visitRepository.save(visit);
+        log.info("process of cancelling visit:{} finished", visitId);
+        return result;
+    }
+
+    public Page<Visit> findAvailableByTimeRangeAndSpecialization(
+            LocalDateTime from, LocalDateTime to, String specialization, Pageable pageable) {
+        if (specialization != null) {
+            log.info("process of finding available visits between:{} and:{} with specialization:{} started", from, to, specialization);
+            Page<Visit> result = visitRepository.findByStatusAndDoctorSpecializationAndStartTimeBetween(
+                    VisitStatus.AVAILABLE, specialization, from, to, pageable);
+            log.info("process of finding available visits between:{} and:{} with specialization:{} finished", from, to, specialization);
+            return result;
+        }
+        log.info("process of finding available visits between:{} and:{} started", from, to);
+        Page<Visit> result = visitRepository.findByStatusAndStartTimeBetween(VisitStatus.AVAILABLE, from, to, pageable);
+        log.info("process of finding available visits between:{} and:{} finished", from, to);
         return result;
     }
 

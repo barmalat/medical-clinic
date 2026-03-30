@@ -24,6 +24,9 @@ public class Visit {
     private Patient patient;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VisitStatus status = VisitStatus.AVAILABLE;
 
     @Override
     public boolean equals(Object o) {
@@ -44,10 +47,12 @@ public class Visit {
                 "id=" + id +
                 ", doctor firstName=" + doctor.getUser().getFirstName() +
                 ", doctor lastName=" + doctor.getUser().getLastName() +
-                ", patient firstName=" + patient.getUser().getFirstName() +
-                ", patient lastName=" + patient.getUser().getLastName() +
+                ", patient=" + (patient != null
+                ? patient.getUser().getFirstName() + " " + patient.getUser().getLastName()
+                : "none") +
                 ", startVisitTime=" + startTime +
                 ", endVisitTime=" + endTime +
+                ", status=" + status +
                 '}';
     }
 }

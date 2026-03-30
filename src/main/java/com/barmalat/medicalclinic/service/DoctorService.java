@@ -25,7 +25,13 @@ public class DoctorService {
     private final DoctorMapper doctorMapper;
     private final FacilityRepository facilityRepository;
 
-    public Page<Doctor> findAll(Pageable pageable) {
+    public Page<Doctor> findAll(String specialization, Pageable pageable) {
+        if (specialization != null) {
+            log.info("process of finding doctors by specialization:{} started", specialization);
+            Page<Doctor> result = doctorRepository.findBySpecialization(specialization, pageable);
+            log.info("process of finding doctors by specialization:{} finished", specialization);
+            return result;
+        }
         log.info("process of finding all doctors started");
         Page<Doctor> result = doctorRepository.findAll(pageable);
         log.info("process of finding all doctors finished");

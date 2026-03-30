@@ -132,3 +132,6 @@ databaseChangeLog:
               - column:
                   name: end_time
                   type: timestamp
+              - column:
+                  name: status
+                  type: varchar(255)

@@ -47,7 +47,7 @@ public class DoctorServiceTest {
     }
 
     @Test
-    void findAll_DataCorrect_PageDoctorsReturn() {
+    void findAll_DataCorrectWithoutSpecialization_PageDoctorsReturn() {
         //given
         Pageable pageable = PageRequest.of(0, 5);
         List<Doctor> doctors = List.of(
@@ -56,7 +56,7 @@ public class DoctorServiceTest {
         );
         when(doctorRepository.findAll(pageable)).thenReturn(new PageImpl<>(doctors, pageable, doctors.size()));
         //when
-        Page<Doctor> result = doctorService.findAll(pageable);
+        Page<Doctor> result = doctorService.findAll(null, pageable);
         //then
         Assertions.assertAll(
                 () -> assertEquals(2, result.getTotalElements()),
@@ -65,6 +65,28 @@ public class DoctorServiceTest {
         verify(doctorRepository, times(1)).findAll(pageable);
         verifyNoMoreInteractions(doctorRepository);
     }
+
+    @Test
+    void findAll_DataCorrectWithSpecialization_PageDoctorsReturn() {
+        //given
+        String specialization = "chirurg";
+        Pageable pageable = PageRequest.of(0, 5);
+        List<Doctor> doctors = List.of(
+                new Doctor(1L, "e", "p", "chirurg", null, null, null),
+                new Doctor(2L, "e", "p", "chirurg", null, null, null)
+        );
+        when(doctorRepository.findBySpecialization(specialization, pageable)).thenReturn(new PageImpl<>(doctors, pageable, doctors.size()));
+        //when
+        Page<Doctor> result = doctorService.findAll(specialization, pageable);
+        //then
+        Assertions.assertAll(
+                () -> assertEquals(2, result.getTotalElements()),
+                () -> assertEquals(doctors, result.getContent())
+        );
+        verify(doctorRepository, times(1)).findBySpecialization(specialization, pageable);
+        verifyNoMoreInteractions(doctorRepository);
+    }
+
 
     @Test
     void findById_DataCorrect_DoctorReturn() {

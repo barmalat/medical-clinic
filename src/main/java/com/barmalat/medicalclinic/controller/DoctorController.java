@@ -18,16 +18,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/doctors")
@@ -38,11 +29,16 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorMapper doctorMapper;
 
-    @Operation(summary = "read all doctors", description = "opcjonalny RequestParam, np. /doctors?page=0&size=3&sort=id")
+    @Operation(summary = "read all doctors", description = """
+            Opcjonalny RequestParam dot. paginacji, np. /doctors?page=0&size=3&sort=id
+            
+            Opcjonalny RequestParam dot. filtrowania po specjalizacji, np. /doctors?specialization=chirurg
+            """)
     @GetMapping
-    public Page<DoctorDto> findAll(@ParameterObject Pageable pageable) {
-        log.info("Received GET /doctors request with pageable:{}", pageable);
-        Page<DoctorDto> result = doctorService.findAll(pageable)
+    public Page<DoctorDto> findAll(@RequestParam(required = false) String specialization,
+                                   @ParameterObject Pageable pageable) {
+        log.info("Received GET /doctors request with pageable:{} and specialization:{}", pageable, specialization);
+        Page<DoctorDto> result = doctorService.findAll(specialization, pageable)
                 .map(doctorMapper::toDto);
         log.info("Returned response for GET /doctors with page with total elements:{}", result.getTotalElements());
         return result;
