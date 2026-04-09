@@ -16,6 +16,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -25,6 +27,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,6 +40,8 @@ public class PatientControllerTest {
     PatientService patientService;
     @Autowired
     ObjectMapper objectMapper;
+    @MockitoBean
+    JwtDecoder jwtDecoder;
 
     @Test
     void findAll_DataCorrect_PagePatientDtoReturn() throws Exception {
@@ -46,7 +51,8 @@ public class PatientControllerTest {
                 new Patient(2L, "ema@pl", "pas", "idC", "pho", "bir", null),
                 new Patient()));
         when(patientService.findAll(pageable)).thenReturn(page);
-        mockMvc.perform(MockMvcRequestBuilders.get("/patients?page=0&size=5"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/patients?page=0&size=5")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:patient"))))
                 .andExpect(jsonPath("$.content[0].id").value(1L));
         verify(patientService, times(1)).findAll(pageable);
         verifyNoMoreInteractions(patientService);
@@ -57,7 +63,8 @@ public class PatientControllerTest {
         String email = "ema@pl";
         Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", null);
         when(patientService.findByEmail(email)).thenReturn(patient);
-        mockMvc.perform(MockMvcRequestBuilders.get("/patients/ema@pl"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/patients/ema@pl")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:patient"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
@@ -77,7 +84,8 @@ public class PatientControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.post("/patients")
                                 .content(objectMapper.writeValueAsString(command))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("create:patient"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
@@ -96,7 +104,8 @@ public class PatientControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.post("/patients")
                                 .content(objectMapper.writeValueAsString(command))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("create:patient"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
                 .andExpect(jsonPath("$.errors.email").value(hasItem("email is mandatory")))
@@ -110,7 +119,8 @@ public class PatientControllerTest {
         String email = "ema@pl";
         Patient patient = new Patient(1L, "ema@pl", "pas", "idC", "pho", "bir", new User(1L, "bar", "malat", null, null));
         when(patientService.deleteByEmail(email)).thenReturn(patient);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/patients/ema@pl"))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/patients/ema@pl")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("delete:patient"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
@@ -131,7 +141,8 @@ public class PatientControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.put("/patients/ema@pl")
                                 .content(objectMapper.writeValueAsString(patientDto))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("update:patient"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.idCardNo").value("idC"))
@@ -149,7 +160,8 @@ public class PatientControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.put("/patients/ema@pl")
                                 .content(objectMapper.writeValueAsString(patientDto))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("update:patient"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
                 .andExpect(jsonPath("$.errors.email").value(hasItem("invalid email format")))
@@ -165,7 +177,8 @@ public class PatientControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.patch("/patients/ema@pl/password")
                                 .content(objectMapper.writeValueAsString(command))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("update:patient"))))
                 .andExpect(status().isNoContent());
     }
 
@@ -173,9 +186,10 @@ public class PatientControllerTest {
     void updatePasswordByEmail_BlankPassword_MethodArgumentNotValidExceptionThrown() throws Exception {
         ChangePatientDataCommand command = new ChangePatientDataCommand("   ");
         mockMvc.perform(
-                MockMvcRequestBuilders.patch("/patients/ema@pl/password")
-                        .content(objectMapper.writeValueAsString(command))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        MockMvcRequestBuilders.patch("/patients/ema@pl/password")
+                                .content(objectMapper.writeValueAsString(command))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("update:patient"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.password").value("password is mandatory"));
         verifyNoInteractions(patientService);

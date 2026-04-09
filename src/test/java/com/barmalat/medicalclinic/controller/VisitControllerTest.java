@@ -16,6 +16,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -26,6 +28,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,6 +41,8 @@ public class VisitControllerTest {
     private VisitService visitService;
     @Autowired
     private ObjectMapper objectMapper;
+    @MockitoBean
+    JwtDecoder jwtDecoder;
 
     @Test
     void find_DataCorrectWithoutPatientId_PageVisitDtoReturn() throws Exception {
@@ -49,7 +54,8 @@ public class VisitControllerTest {
         );
         Page<Visit> page = new PageImpl<>(visits);
         when(visitService.find(null, null, null, null, null, pageable)).thenReturn(page);
-        mockMvc.perform(MockMvcRequestBuilders.get("/visits?page=0&size=5"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/visits?page=0&size=5")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:visit"))))
                 .andExpect(jsonPath("$.content[0].id").value(1L))
                 .andExpect(jsonPath("$.content[1].id").value(2L))
                 .andExpect(jsonPath("$.content[0].patient").isEmpty());
@@ -67,7 +73,8 @@ public class VisitControllerTest {
         );
         Page<Visit> page = new PageImpl<>(visits);
         when(visitService.find(patientId, null, null, null, null, pageable)).thenReturn(page);
-        mockMvc.perform(MockMvcRequestBuilders.get("/visits?page=0&size=5&patientId=8"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/visits?page=0&size=5&patientId=8")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:visit"))))
                 .andExpect(jsonPath("$.content[0].id").value(1L))
                 .andExpect(jsonPath("$.content[1].id").value(2L))
                 .andExpect(jsonPath("$.content[0].patient.id").value(8L));
@@ -84,7 +91,8 @@ public class VisitControllerTest {
         );
         Page<Visit> page = new PageImpl<>(visits);
         when(visitService.find(null, doctorId, null, null, null, pageable)).thenReturn(page);
-        mockMvc.perform(MockMvcRequestBuilders.get("/visits?page=0&size=5&doctorId=1"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/visits?page=0&size=5&doctorId=1")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:visit"))))
                 .andExpect(jsonPath("$.content[0].id").value(1L))
                 .andExpect(jsonPath("$.content[1].id").value(2L))
                 .andExpect(jsonPath("$.content[0].status").value("AVAILABLE"))
@@ -96,11 +104,12 @@ public class VisitControllerTest {
         CreateVisitCommand command = new CreateVisitCommand(null, 1L, LocalDateTime.of(2027, 2, 15, 10, 0),
                 LocalDateTime.of(2027, 2, 15, 10, 30));
         Visit visit = new Visit(1L, new Doctor(1L, "ema@pl", "pas", "spe", null, null, null), null,
-                LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30),VisitStatus.AVAILABLE);
+                LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30), VisitStatus.AVAILABLE);
         when(visitService.addVisit(command)).thenReturn(visit);
         mockMvc.perform(MockMvcRequestBuilders.post("/visits")
                         .content(objectMapper.writeValueAsString(command))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("create:visit"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.doctor.id").value(1L))
@@ -121,7 +130,8 @@ public class VisitControllerTest {
                 LocalDateTime.of(2025, 2, 15, 10, 30));
         mockMvc.perform(MockMvcRequestBuilders.post("/visits")
                         .content(objectMapper.writeValueAsString(command))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("create:visit"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
                 .andExpect(jsonPath("$.errors.doctorId").value(hasItem("doctorId is mandatory")));
@@ -134,9 +144,10 @@ public class VisitControllerTest {
         Long patientId = 8L;
         Visit visit = new Visit(1L, new Doctor(1L, "ema", "pas", "spe", null, null, null),
                 new Patient(8L, "e", "p", "i", "ph", "b", null),
-                LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2025, 2, 15, 10, 30),VisitStatus.RESERVED);
+                LocalDateTime.of(2026, 2, 15, 10, 0), LocalDateTime.of(2025, 2, 15, 10, 30), VisitStatus.RESERVED);
         when(visitService.addPatientToVisit(visitId, patientId)).thenReturn(visit);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/visits/1/patient/8"))
+        mockMvc.perform(MockMvcRequestBuilders.patch("/visits/1/patient/8")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("book:visit"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.doctor.id").value(1L))
                 .andExpect(jsonPath("$.doctor.email").value("ema"))
@@ -157,7 +168,8 @@ public class VisitControllerTest {
                 new Patient(8L, "e", "p", "i", "ph", "b", null),
                 LocalDateTime.of(2027, 2, 15, 10, 0), LocalDateTime.of(2027, 2, 15, 10, 30), VisitStatus.CANCELLED);
         when(visitService.cancelVisit(visitId)).thenReturn(visit);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/visits/1/cancel"))
+        mockMvc.perform(MockMvcRequestBuilders.patch("/visits/1/cancel")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("cancel:visit"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.status").value("CANCELLED"))
                 .andExpect(jsonPath("$.patient").isNotEmpty());

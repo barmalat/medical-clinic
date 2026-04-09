@@ -16,6 +16,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -26,6 +28,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,6 +41,8 @@ public class DoctorControllerTest {
     DoctorService doctorService;
     @Autowired
     ObjectMapper objectMapper;
+    @MockitoBean
+    JwtDecoder jwtDecoder;
 
     @Test
     void findAll_DataCorrectWithoutSpecialization_PageDoctorDtoReturn() throws Exception {
@@ -47,7 +52,8 @@ public class DoctorControllerTest {
                 new Doctor(2L, "ema@pl", "pas", "spe", new User(2L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>())
         ));
         when(doctorService.findAll(null, pageable)).thenReturn(page);
-        mockMvc.perform(MockMvcRequestBuilders.get("/doctors?page=0&size=5"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/doctors?page=0&size=5")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:doctor"))))
                 .andExpect(jsonPath("$.content[0].id").value(1L))
                 .andExpect(jsonPath("$.content[1].id").value(2L));
     }
@@ -61,20 +67,21 @@ public class DoctorControllerTest {
                 new Doctor(2L, "ema@pl", "pas", "chirurg", new User(2L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>())
         ));
         when(doctorService.findAll(specialization, pageable)).thenReturn(page);
-        mockMvc.perform(MockMvcRequestBuilders.get("/doctors?page=0&size=5&specialization=chirurg"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/doctors?page=0&size=5&specialization=chirurg")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:doctor"))))
                 .andExpect(jsonPath("$.content[0].id").value(1L))
                 .andExpect(jsonPath("$.content[0].specialization").value("chirurg"))
                 .andExpect(jsonPath("$.content[1].id").value(2L))
                 .andExpect(jsonPath("$.content[1].specialization").value("chirurg"));
     }
 
-
     @Test
     void findById_DataCorrect_DoctorDtoReturn() throws Exception {
         Long doctorId = 1L;
         Doctor doctor = new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
         when(doctorService.findById(doctorId)).thenReturn(doctor);
-        mockMvc.perform(MockMvcRequestBuilders.get("/doctors/1"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/doctors/1")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("read:doctor"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
@@ -91,7 +98,8 @@ public class DoctorControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.post("/doctors")
                                 .content(objectMapper.writeValueAsString(command))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("create:doctor"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
@@ -107,7 +115,8 @@ public class DoctorControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.post("/doctors")
                                 .content(objectMapper.writeValueAsString(command))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("create:doctor"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
                 .andExpect(jsonPath("$.errors.email").value(hasItem("email is mandatory")))
@@ -121,7 +130,8 @@ public class DoctorControllerTest {
         Long doctorId = 1L;
         Doctor doctor = new Doctor(1L, "ema@pl", "pas", "spe", new User(1L, "fis", "las", null, null), new ArrayList<>(), new ArrayList<>());
         when(doctorService.deleteById(doctorId)).thenReturn(doctor);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/doctors/1"))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/doctors/1")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("delete:doctor"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
@@ -139,7 +149,8 @@ public class DoctorControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.put("/doctors/1")
                                 .content(objectMapper.writeValueAsString(doctorDto))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("update:doctor"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema@pl"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
@@ -154,7 +165,8 @@ public class DoctorControllerTest {
         mockMvc.perform(
                         MockMvcRequestBuilders.put("/doctors/1")
                                 .content(objectMapper.writeValueAsString(doctorDto))
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .with(jwt().authorities(new SimpleGrantedAuthority("update:doctor"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
                 .andExpect(jsonPath("$.errors.email").value(hasItem("email is mandatory")))
@@ -169,7 +181,8 @@ public class DoctorControllerTest {
         Doctor doctor = new Doctor(1L, "ema", "pas", "spe", new User(1L, "fis", "las", null, null),
                 List.of(new Facility(1L, "salve", "lodz", "postalCode", "street", "streetNo", null)), new ArrayList<>());
         when(doctorService.addFacilityById(doctorId, facilityId)).thenReturn(doctor);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/doctors/1/facility/1"))
+        mockMvc.perform(MockMvcRequestBuilders.patch("/doctors/1/facility/1")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("update:doctor"))))
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.email").value("ema"))
                 .andExpect(jsonPath("$.specialization").value("spe"))
